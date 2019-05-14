@@ -133,7 +133,7 @@ with open(user_input, "r") as opened_file:
                 highest_heading_number = total_consecutive_number_signs_at_beginning_of_line
                 lowest_heading_number = total_consecutive_number_signs_at_beginning_of_line
                 calculation_started = True
-            if total_consecutive_number_signs_at_beginning_of_line > highest_heading_number:
+            if total_consecutive_number_signs_at_beginning_of_line > highest_heading_number and total_consecutive_number_signs_at_beginning_of_line <= 6:
                 highest_heading_number = total_consecutive_number_signs_at_beginning_of_line
             if total_consecutive_number_signs_at_beginning_of_line < lowest_heading_number:
                 lowest_heading_number = total_consecutive_number_signs_at_beginning_of_line
