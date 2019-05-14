@@ -13,9 +13,11 @@ mkd_output_produced = False
 produce_mkd_output = True
 
 # Using the argparse module
-parser = argparse.ArgumentParser()
+parser = argparse.ArgumentParser(prefix_chars='-+')
 parser.add_argument("filename", help="filename for input", default="None")
 parser.add_argument("-d", "--diagnostic", help="produce diagnostic information on the provided input instead of output", action="store_true")
+parser.add_argument("+H", dest="plus_H", help="increase heading level by a numerical amount, or *max* for maximum allowable amount", default="None")
+parser.add_argument("-H", dest="minus_H", help="decrease heading level by a numerical amount, or *max* for maximum allowable amount", default="None")
 parser.add_argument("-w", "--write-in-place", help="overwrite input file", action="store_true")
 modification_group = parser.add_argument_group('modification arguments', 'By default, the relative hierarchical differences between headings will be preserved.')
 mutually_exclusive_modification_group = modification_group.add_mutually_exclusive_group()
@@ -34,12 +36,12 @@ if args.write_in_place == True:
 else:
     write_in_place = False
 
-if args.heading_decrease_max == True:
+if args.heading_decrease_max == True or args.minus_H == "max":
     decrease_overall_heading_level_maximally = True
 else:
     decrease_overall_heading_level_maximally = False
 
-if args.heading_increase_max == True:
+if args.heading_increase_max == True or args.plus_H == "max":
     increase_overall_heading_level_maximally = True
 else:
     increase_overall_heading_level_maximally = False
