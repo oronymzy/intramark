@@ -144,13 +144,26 @@ with open(user_input, "r") as opened_file:
                     break
             individual_line_ending_number_sign_count.append(total_consecutive_number_signs_at_end_of_line)
             # Determining if the line contains a heading
-            if ((total_consecutive_number_signs_at_beginning_of_line != 0) or ((total_consecutive_number_signs_at_beginning_of_line != 0) and (total_consecutive_number_signs_at_end_of_line != 0))) and (total_number_signs_in_current_line_string == total_consecutive_number_signs_at_beginning_of_line + total_consecutive_number_signs_at_end_of_line):
-                # Indicating that there is a heading
-                at_least_one_heading_exists = True
-                total_heading_count += 1
-                individual_line_contains_heading.append(True)
-            else:
-                individual_line_contains_heading.append(False)
+            heading_detection_complete_for_current_line = False
+            number_sign_count = 0
+            while heading_detection_complete_for_current_line == False:
+                number_sign_count += 1
+                if current_line_string.startswith((NUMBER_SIGN * number_sign_count) + " ") and number_sign_count <= 6:
+                    # Indicating that there is a heading
+                    at_least_one_heading_exists = True
+                    total_heading_count += 1
+                    individual_line_contains_heading.append(True)
+                    heading_detection_complete_for_current_line = True
+                elif current_line_string.startswith(NUMBER_SIGN * number_sign_count) and len(current_line_string) == number_sign_count and number_sign_count <= 6:
+                    # Detecting a heading where the line contains only 1-6 number signs. This is equivalent to the CommonMark speficication that a heading can be followed by a newline.
+                    # Indicating that there is a heading
+                    at_least_one_heading_exists = True
+                    total_heading_count += 1
+                    individual_line_contains_heading.append(True)
+                    heading_detection_complete_for_current_line = True
+                elif number_sign_count > 6:
+                    heading_detection_complete_for_current_line = True
+                    individual_line_contains_heading.append(False)
         else:
             individual_line_beginning_number_sign_count.append(None)
             individual_line_ending_number_sign_count.append(None)
