@@ -16,13 +16,13 @@ produce_mkd_output = True
 parser = argparse.ArgumentParser(prefix_chars='-+')
 parser.add_argument("filename", help="filename for input", default="None")
 parser.add_argument("-d", "--diagnostic", help="produce diagnostic information on the provided input instead of output", action="store_true")
-parser.add_argument("+H", dest="plus_H", help="increase heading level by a numerical amount, or *max* for maximum allowable amount", default="None")
-parser.add_argument("-H", dest="minus_H", help="decrease heading level by a numerical amount, or *max* for maximum allowable amount", default="None")
+parser.add_argument("+H", dest="plus_H", help="increase overall heading level by a numerical amount, or *max* for maximum allowable amount", default="None")
+parser.add_argument("-H", dest="minus_H", help="decrease overall heading level by a numerical amount, or *max* for maximum allowable amount", default="None")
 parser.add_argument("-w", "--write-in-place", help="overwrite input file", action="store_true")
 modification_group = parser.add_argument_group('modification arguments', 'By default, the relative hierarchical differences between headings will be preserved.')
 mutually_exclusive_modification_group = modification_group.add_mutually_exclusive_group()
-mutually_exclusive_modification_group.add_argument("--heading-decrease-max", help="decrease heading levels to maximum allowable amount", action="store_true")
-mutually_exclusive_modification_group.add_argument("--heading-increase-max", help="increase heading levels to maximum allowable amount", action="store_true")
+mutually_exclusive_modification_group.add_argument("--heading-decrease-max", help="decrease overall heading level by maximum allowable amount", action="store_true")
+mutually_exclusive_modification_group.add_argument("--heading-increase-max", help="increase overall heading level by maximum allowable amount", action="store_true")
 args = parser.parse_args()
 
 if args.diagnostic == True:
