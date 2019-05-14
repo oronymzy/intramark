@@ -171,9 +171,6 @@ with open(user_input, "r") as opened_file:
             individual_line_contains_heading.append(False)
     # Resetting file object position to beginning of file
     opened_file.seek(0)
-    if at_least_one_heading_exists == False:
-        print("No headings were found.")
-        exit()
 
 # Resetting the current line number
 current_line_number = 0
@@ -234,19 +231,22 @@ current_line_number = 0
 # Summarizing heading-related information
 if diagnostic == True:
     print("\nDiagnostic information:\n".upper())
-    with open(user_input, "r") as opened_file:
-        print("The total heading count is ",total_heading_count,".", sep='')
-        print("The highest heading level is ",highest_heading_number,".", sep='')
-        print("The lowest heading level is ",lowest_heading_number,".", sep='')
-        for current_line_string in opened_file:
-            if individual_line_contains_heading[current_line_number]:
-                print("Line",current_line_number + 1,"contains a heading.")
-                print("Line",current_line_number + 1,"has",individual_line_total_number_sign_count[current_line_number],"total number signs", end='')
-                if individual_line_ending_number_sign_count[current_line_number]:
-                    print(":",individual_line_beginning_number_sign_count[current_line_number],"at the beginning, and",individual_line_ending_number_sign_count[current_line_number],"at the end.")
+    if at_least_one_heading_exists == True:
+        with open(user_input, "r") as opened_file:
+            print("The total heading count is ",total_heading_count,".", sep='')
+            print("The highest heading level is ",highest_heading_number,".", sep='')
+            print("The lowest heading level is ",lowest_heading_number,".", sep='')
+            for current_line_string in opened_file:
+                if individual_line_contains_heading[current_line_number]:
+                    print("Line",current_line_number + 1,"contains a heading.")
+                    print("Line",current_line_number + 1,"has",individual_line_total_number_sign_count[current_line_number],"total number signs", end='')
+                    if individual_line_ending_number_sign_count[current_line_number]:
+                        print(":",individual_line_beginning_number_sign_count[current_line_number],"at the beginning, and",individual_line_ending_number_sign_count[current_line_number],"at the end.")
+                    else:
+                        print(", all of which are at the beginning of the line.")
                 else:
-                    print(", all of which are at the beginning of the line.")
-            else:
-                print("Line",current_line_number + 1,"does not contain a heading.")
-            # Incrementing to keep track of the current line number
-            current_line_number += 1
+                    print("Line",current_line_number + 1,"does not contain a heading.")
+                # Incrementing to keep track of the current line number
+                current_line_number += 1
+    elif at_least_one_heading_exists == False:
+        print("No headings were found.")
