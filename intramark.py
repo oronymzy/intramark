@@ -16,8 +16,8 @@ produce_mkd_output = True
 parser = argparse.ArgumentParser(prefix_chars='-+')
 parser.add_argument("filename", help="filename for input", default="None")
 parser.add_argument("-d", "--diagnostic", help="produce diagnostic information on the provided input instead of output", action="store_true")
-parser.add_argument("+H", dest="plus_H", help="increase overall heading level by a numerical amount, or *max* for maximum allowable amount", default="None")
-parser.add_argument("-H", dest="minus_H", help="decrease overall heading level by a numerical amount, or *max* for maximum allowable amount", default="None")
+parser.add_argument("+H", dest="plus_H", help="increase overall heading level by a numerical amount from 1-5, or *max* for maximum allowable amount", default="None")
+parser.add_argument("-H", dest="minus_H", help="decrease overall heading level by a numerical amount from 1-5, or *max* for maximum allowable amount", default="None")
 parser.add_argument("-w", "--write-in-place", help="overwrite input file", action="store_true")
 modification_group = parser.add_argument_group('modification arguments', 'By default, the relative hierarchical differences between headings will be preserved.')
 mutually_exclusive_modification_group = modification_group.add_mutually_exclusive_group()
@@ -46,7 +46,31 @@ if args.heading_increase_max == True or args.plus_H == "max":
 else:
     increase_overall_heading_level_maximally = False
 
-if decrease_overall_heading_level_maximally == True or increase_overall_heading_level_maximally == True:
+# Determining if `minus_H` has a string that should be converted to an integer value
+if args.minus_H != "None" and args.minus_H != "max":
+    if int(args.minus_H) >= 1 and int(args.minus_H) <= 5:
+        decrease_overall_heading_level_numerically = True
+        number_of_heading_levels_to_decrease_numerically = int(args.minus_H)
+    else:
+        print("\nInvalid input:".upper(),"acceptable values for *-H* are *max* or *1-5*.\n")
+        parser.print_help()
+        exit()
+else:
+    decrease_overall_heading_level_numerically = False
+
+# Determining if `plus_H` has a string that should be converted to an integer value
+if args.plus_H != "None" and args.plus_H != "max":
+    if int(args.plus_H) >= 1 and int(args.plus_H) <= 5:
+        increase_overall_heading_level_numerically = True
+        number_of_heading_levels_to_increase_numerically = int(args.plus_H)
+    else:
+        print("\nInvalid input:".upper(),"acceptable values for *+H* are *max* or *1-5*.\n")
+        parser.print_help()
+        exit()
+else:
+    increase_overall_heading_level_numerically = False
+
+if decrease_overall_heading_level_maximally == True or increase_overall_heading_level_maximally == True or decrease_overall_heading_level_numerically == True or increase_overall_heading_level_numerically == True:
     modification_to_be_made = True
 
 # Input validation: at least one modification option is required in most cases.
@@ -98,6 +122,9 @@ individual_line_total_number_sign_count = list()
 # - total heading count
 # - total line count
 # Determining the following things for each individual line:
+# - beginning number sign count
+# - ending number sign count
+# - total number sign count
 # - if a heading exists
 with open(user_input, "r") as opened_file:
     # Assignment to hold the current line number
@@ -180,24 +207,34 @@ current_line_number = 0
 # Accomplishing any of the following things:
 # - decrease overall heading level maximally
 # - increase overall heading level maximally
-if decrease_overall_heading_level_maximally == True or increase_overall_heading_level_maximally == True:
+if decrease_overall_heading_level_maximally == True or increase_overall_heading_level_maximally == True or decrease_overall_heading_level_numerically == True or increase_overall_heading_level_numerically == True:
     # Creating temporary file to hold intermediate modifications
     with tempfile.TemporaryFile('w+') as temporary_file:
         with open(user_input, "r") as opened_file:
             # Determining how many levels to increase or decrease all headings
             if decrease_overall_heading_level_maximally == True:
-                number_of_heading_levels_to_decrease = lowest_heading_number - 1
+                number_of_heading_levels_to_decrease_maximally = lowest_heading_number - 1
             elif increase_overall_heading_level_maximally == True:
-                number_of_heading_levels_to_increase = 6 - highest_heading_number
+                number_of_heading_levels_to_increase_maximally = 6 - highest_heading_number
+            elif decrease_overall_heading_level_numerically == True and lowest_heading_number - number_of_heading_levels_to_decrease_numerically < 1:
+                number_of_heading_levels_to_decrease_numerically = lowest_heading_number - 1
+            elif increase_overall_heading_level_numerically == True and highest_heading_number + number_of_heading_levels_to_increase_numerically > 6:
+                number_of_heading_levels_to_increase_numerically = 6 - highest_heading_number
             for current_line_string in opened_file:
                 # Removing newlines
                 current_line_string = current_line_string.strip()
                 if decrease_overall_heading_level_maximally == True and individual_line_contains_heading[current_line_number]:
-                    # If a line contains a heading, write a slice of that line excluding the first *N* characters, where *N* is specified in the `number_of_heading_levels_to_decrease` identifier.
-                    current_line_string = current_line_string[number_of_heading_levels_to_decrease:]
+                    # If a line contains a heading, write a slice of that line excluding the first *N* characters, where *N* is specified in the `number_of_heading_levels_to_decrease_maximally` identifier.
+                    current_line_string = current_line_string[number_of_heading_levels_to_decrease_maximally:]
                 elif increase_overall_heading_level_maximally == True and individual_line_contains_heading[current_line_number]:
-                    # If a line contains a heading, write a string of number signs of *N* length, where *N* is specified in the `number_of_heading_levels_to_increase` identifier.
-                    current_line_string = (NUMBER_SIGN * number_of_heading_levels_to_increase) + current_line_string
+                    # If a line contains a heading, write a string of number signs of *N* length, where *N* is specified in the `number_of_heading_levels_to_increase_maximally` identifier.
+                    current_line_string = (NUMBER_SIGN * number_of_heading_levels_to_increase_maximally) + current_line_string
+                elif decrease_overall_heading_level_numerically == True and individual_line_contains_heading[current_line_number]:
+                    # If a line contains a heading, write a slice of that line excluding the first *N* characters, where *N* is specified in the `number_of_heading_levels_to_decrease_numerically` identifier.
+                    current_line_string = current_line_string[number_of_heading_levels_to_decrease_numerically:]
+                elif increase_overall_heading_level_numerically == True and individual_line_contains_heading[current_line_number]:
+                    # If a line contains a heading, write a string of number signs of *N* length, where *N* is specified in the `number_of_heading_levels_to_increase_numerically` identifier.
+                    current_line_string = (NUMBER_SIGN * number_of_heading_levels_to_increase_numerically) + current_line_string
                 # Writing the line to a temporary file
                 temporary_file.write("{}\n".format(current_line_string))
                 # Incrementing to keep track of the current line number
