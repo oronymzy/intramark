@@ -211,30 +211,33 @@ if decrease_overall_heading_level_maximally == True or increase_overall_heading_
     # Creating temporary file to hold intermediate modifications
     with tempfile.TemporaryFile('w+') as temporary_file:
         with open(user_input, "r") as opened_file:
+            # Assignments to hold default values
+            number_of_heading_levels_to_decrease_in_either_case = 0
+            number_of_heading_levels_to_increase_in_either_case = 0
+            decrease_overall_heading_level_in_either_case = False
+            increase_overall_heading_level_in_either_case = False
             # Determining how many levels to increase or decrease all headings
-            if decrease_overall_heading_level_maximally == True:
-                number_of_heading_levels_to_decrease_maximally = lowest_heading_number - 1
-            elif increase_overall_heading_level_maximally == True:
-                number_of_heading_levels_to_increase_maximally = 6 - highest_heading_number
-            elif decrease_overall_heading_level_numerically == True and lowest_heading_number - number_of_heading_levels_to_decrease_numerically < 1:
-                number_of_heading_levels_to_decrease_numerically = lowest_heading_number - 1
-            elif increase_overall_heading_level_numerically == True and highest_heading_number + number_of_heading_levels_to_increase_numerically > 6:
-                number_of_heading_levels_to_increase_numerically = 6 - highest_heading_number
+            if (decrease_overall_heading_level_maximally == True) or (decrease_overall_heading_level_numerically == True and lowest_heading_number - number_of_heading_levels_to_decrease_numerically < 1):
+                number_of_heading_levels_to_decrease_in_either_case = lowest_heading_number - 1
+                decrease_overall_heading_level_in_either_case = True
+            elif (increase_overall_heading_level_maximally == True) or (increase_overall_heading_level_numerically == True and highest_heading_number + number_of_heading_levels_to_increase_numerically > 6):
+                number_of_heading_levels_to_increase_in_either_case = 6 - highest_heading_number
+                increase_overall_heading_level_in_either_case = True
+            elif decrease_overall_heading_level_numerically == True:
+                number_of_heading_levels_to_decrease_in_either_case = number_of_heading_levels_to_decrease_numerically
+                decrease_overall_heading_level_in_either_case = True
+            elif increase_overall_heading_level_numerically == True:
+                number_of_heading_levels_to_increase_in_either_case = number_of_heading_levels_to_increase_numerically
+                increase_overall_heading_level_in_either_case = True
             for current_line_string in opened_file:
                 # Removing newlines
                 current_line_string = current_line_string.strip()
-                if decrease_overall_heading_level_maximally == True and individual_line_contains_heading[current_line_number]:
-                    # If a line contains a heading, write a slice of that line excluding the first *N* characters, where *N* is specified in the `number_of_heading_levels_to_decrease_maximally` identifier.
-                    current_line_string = current_line_string[number_of_heading_levels_to_decrease_maximally:]
-                elif increase_overall_heading_level_maximally == True and individual_line_contains_heading[current_line_number]:
-                    # If a line contains a heading, write a string of number signs of *N* length, where *N* is specified in the `number_of_heading_levels_to_increase_maximally` identifier.
-                    current_line_string = (NUMBER_SIGN * number_of_heading_levels_to_increase_maximally) + current_line_string
-                elif decrease_overall_heading_level_numerically == True and individual_line_contains_heading[current_line_number]:
-                    # If a line contains a heading, write a slice of that line excluding the first *N* characters, where *N* is specified in the `number_of_heading_levels_to_decrease_numerically` identifier.
-                    current_line_string = current_line_string[number_of_heading_levels_to_decrease_numerically:]
-                elif increase_overall_heading_level_numerically == True and individual_line_contains_heading[current_line_number]:
-                    # If a line contains a heading, write a string of number signs of *N* length, where *N* is specified in the `number_of_heading_levels_to_increase_numerically` identifier.
-                    current_line_string = (NUMBER_SIGN * number_of_heading_levels_to_increase_numerically) + current_line_string
+                if decrease_overall_heading_level_in_either_case == True and individual_line_contains_heading[current_line_number]:
+                    # If a line contains a heading, write a slice of that line excluding the first *N* characters, where *N* is specified in the `number_of_heading_levels_to_decrease_in_either_case` identifier.
+                    current_line_string = current_line_string[number_of_heading_levels_to_decrease_in_either_case:]
+                elif increase_overall_heading_level_in_either_case == True and individual_line_contains_heading[current_line_number]:
+                    # If a line contains a heading, write a string of number signs of *N* length, where *N* is specified in the `number_of_heading_levels_to_increase_in_either_case` identifier.
+                    current_line_string = (NUMBER_SIGN * number_of_heading_levels_to_increase_in_either_case) + current_line_string
                 # Writing the line to a temporary file
                 temporary_file.write("{}\n".format(current_line_string))
                 # Incrementing to keep track of the current line number
