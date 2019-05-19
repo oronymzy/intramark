@@ -14,12 +14,12 @@ produce_mkd_output = True
 
 # Using the argparse module
 parser = argparse.ArgumentParser(prefix_chars='-+')
-parser.add_argument("filename", help="filename for input", default="None")
+parser.add_argument("filename", help="filename for input", default=None)
 parser.add_argument("-d", "--diagnostic", help="produce diagnostic information on the provided input instead of output", action="store_true")
 parser.add_argument("-w", "--write-in-place", help="overwrite input file", action="store_true")
 modification_group = parser.add_argument_group('modification arguments', 'By default, the relative hierarchical differences between headings will be preserved.')
-modification_group.add_argument("+H", dest="plus_H", help="increase overall heading level by a numerical amount from 1-5, or *max* for maximum allowable amount", default="None")
-modification_group.add_argument("-H", dest="minus_H", help="decrease overall heading level by a numerical amount from 1-5, or *max* for maximum allowable amount", default="None")
+modification_group.add_argument("+H", dest="plus_H", help="increase overall heading level by a numerical amount from 1-5, or *max* for maximum allowable amount", default=None)
+modification_group.add_argument("-H", dest="minus_H", help="decrease overall heading level by a numerical amount from 1-5, or *max* for maximum allowable amount", default=None)
 mutually_exclusive_modification_group = modification_group.add_mutually_exclusive_group()
 mutually_exclusive_modification_group.add_argument("--heading-decrease-max", help="decrease overall heading level by maximum allowable amount", action="store_true")
 mutually_exclusive_modification_group.add_argument("--heading-increase-max", help="increase overall heading level by maximum allowable amount", action="store_true")
@@ -47,7 +47,7 @@ else:
     increase_overall_heading_level_maximally = False
 
 # Determining if `minus_H` has a string that should be converted to an integer value
-if args.minus_H != "None" and args.minus_H != "max":
+if args.minus_H != None and args.minus_H != "max":
     if int(args.minus_H) >= 1 and int(args.minus_H) <= 5:
         decrease_overall_heading_level_numerically = True
         number_of_heading_levels_to_decrease_numerically = int(args.minus_H)
@@ -59,7 +59,7 @@ else:
     decrease_overall_heading_level_numerically = False
 
 # Determining if `plus_H` has a string that should be converted to an integer value
-if args.plus_H != "None" and args.plus_H != "max":
+if args.plus_H != None and args.plus_H != "max":
     if int(args.plus_H) >= 1 and int(args.plus_H) <= 5:
         increase_overall_heading_level_numerically = True
         number_of_heading_levels_to_increase_numerically = int(args.plus_H)
