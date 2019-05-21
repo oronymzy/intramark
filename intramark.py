@@ -80,10 +80,10 @@ if write_in_place == True and modification_to_be_made == False:
         parser.print_help()
         exit()
 
-user_input = args.filename
+input_filename = args.filename
 # Detecting command-line interface convention of indicating standard input with a single dash `-`
-if user_input.strip() == '-':
-    user_input = sys.stdin.readline()
+if input_filename.strip() == '-':
+    input_filename = sys.stdin.readline()
 
 # Determining if the program is executing from a terminal
 if sys.stdin.isatty():
@@ -92,18 +92,18 @@ else:
     executing_from_terminal = False
 
 # Removing leading and trailing spaces
-user_input = user_input.strip(" ")
+input_filename = input_filename.strip(" ")
 # Checking if a file exists
-file_exists = os.path.isfile(user_input)
+file_exists = os.path.isfile(input_filename)
 
 # File validation: the file must exist
 if executing_from_terminal == True:
     while file_exists == False:
-        user_input = input("The specified file does not exist. Enter a filename:")
+        input_filename = input("The specified file does not exist. Enter a filename:")
         # Removing leading and trailing spaces
-        user_input = user_input.strip(" ")
+        input_filename = input_filename.strip(" ")
         # Checking if a file exists
-        file_exists = os.path.isfile(user_input)
+        file_exists = os.path.isfile(input_filename)
 elif executing_from_terminal == False:
     print("File does not exist. Exiting.")
     exit()
@@ -127,7 +127,7 @@ individual_line_total_number_sign_count = list()
 # - ending number sign count
 # - total number sign count
 # - if a heading exists
-with open(user_input, "r") as opened_file:
+with open(input_filename, "r") as opened_file:
     # Assignment to hold the current line number
     current_line_number = 0
     # Assignment to indicate that there are no headings
@@ -211,7 +211,7 @@ current_line_number = 0
 if decrease_overall_heading_level_maximally == True or increase_overall_heading_level_maximally == True or decrease_overall_heading_level_numerically == True or increase_overall_heading_level_numerically == True:
     # Creating temporary file to hold intermediate modifications
     with tempfile.TemporaryFile('w+') as temporary_file:
-        with open(user_input, "r") as opened_file:
+        with open(input_filename, "r") as opened_file:
             # Assignments to hold default values
             number_of_heading_levels_to_decrease_in_either_case = 0
             number_of_heading_levels_to_increase_in_either_case = 0
@@ -249,7 +249,7 @@ if decrease_overall_heading_level_maximally == True or increase_overall_heading_
             temporary_file.seek(0)
             # Resetting the current line number
             current_line_number = 0
-            with open(user_input, "w+") as opened_file:
+            with open(input_filename, "w+") as opened_file:
                 for current_line_string in temporary_file:
                     opened_file.write("{}".format(current_line_string))
         elif produce_mkd_output == True:
@@ -264,7 +264,7 @@ if decrease_overall_heading_level_maximally == True or increase_overall_heading_
 if produce_mkd_output == True and mkd_output_produced == False:
     # Resetting the current line number
     current_line_number = 0
-    with open(user_input, "r") as opened_file:
+    with open(input_filename, "r") as opened_file:
         for current_line_string in opened_file:
             print(current_line_string, end='')
 
@@ -275,7 +275,7 @@ current_line_number = 0
 if diagnostic == True:
     print("\nDiagnostic information:\n".upper())
     if at_least_one_heading_exists == True:
-        with open(user_input, "r") as opened_file:
+        with open(input_filename, "r") as opened_file:
             print("The total heading count is ",total_heading_count,".", sep='')
             print("The highest heading level is ",highest_heading_number,".", sep='')
             print("The lowest heading level is ",lowest_heading_number,".", sep='')
