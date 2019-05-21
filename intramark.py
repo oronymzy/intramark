@@ -108,6 +108,8 @@ elif executing_from_terminal == False:
     print("File does not exist. Exiting.")
     exit()
 
+# Heading analysis section begins
+
 # Creating an empty list, with each element holding the number sign count for the beginning of an individual line
 individual_line_beginning_number_sign_count = list()
 # Creating an empty list, with each element holding the number sign count for the ending of an individual line
@@ -204,6 +206,8 @@ with open(input_filename, "r") as opened_file:
 
 # Resetting the current line number
 current_line_number = 0
+
+# Heading analysis section ends
 
 # Accomplishing any of the following things:
 # - decrease overall heading level maximally
