@@ -142,7 +142,7 @@ with open(input_filename, "r") as opened_file:
     calculation_started = False
     for current_line_string in opened_file:
         # Removing newlines
-        current_line_string = current_line_string.strip()
+        current_line_string = current_line_string.rstrip('\n')
         # Incrementing to keep track of the current line number
         current_line_number += 1
         # Determining if the current line contains any number signs
@@ -236,7 +236,7 @@ if decrease_overall_heading_level_maximally == True or increase_overall_heading_
                 increase_overall_heading_level_in_either_case = True
             for current_line_string in opened_file:
                 # Removing newlines
-                current_line_string = current_line_string.strip()
+                current_line_string = current_line_string.rstrip('\n')
                 if decrease_overall_heading_level_in_either_case == True and individual_line_contains_heading[current_line_number]:
                     # If a line contains a heading, write a slice of that line excluding the first *N* characters, where *N* is specified in the `number_of_heading_levels_to_decrease_in_either_case` identifier.
                     current_line_string = current_line_string[number_of_heading_levels_to_decrease_in_either_case:]
