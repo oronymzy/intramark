@@ -110,6 +110,9 @@ elif executing_from_terminal == False:
 
 # Heading analysis section begins
 
+# Tuple containing all possible number sign combinations that indicate headings
+number_sign_and_space_character_combination_indicating_a_heading = ("# ", "## ", "### ", "#### ", "##### ", "###### ")
+
 # Creating an empty list, with each element holding the number sign count for the beginning of an individual line
 individual_line_beginning_number_sign_count = list()
 # Creating an empty list, with each element holding the number sign count for the ending of an individual line
@@ -145,8 +148,8 @@ with open(input_filename, "r") as opened_file:
         current_line_string = current_line_string.rstrip('\n')
         # Incrementing to keep track of the current line number
         current_line_number += 1
-        # Determining if the current line contains any number signs
-        if NUMBER_SIGN in current_line_string:
+        # Determining if the current line contains a heading
+        if current_line_string.startswith(number_sign_and_space_character_combination_indicating_a_heading):
             # Determining how many number signs are in the current line
             total_number_signs_in_current_line_string = current_line_string.count(NUMBER_SIGN)
             individual_line_total_number_sign_count.append(total_number_signs_in_current_line_string)
