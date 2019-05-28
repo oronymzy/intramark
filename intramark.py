@@ -110,15 +110,21 @@ elif executing_from_terminal == False:
 
 # Heading analysis section begins
 
-# Tuple containing all possible number sign combinations that indicate headings
+# Creating a tuple containing all possible number sign combinations that indicate headings
 number_sign_and_space_character_combination_indicating_a_heading = ("# ", "## ", "### ", "#### ", "##### ", "###### ")
 
-# Creating an empty list, with each element holding the number sign count for the beginning of an individual line
-individual_line_beginning_number_sign_count = list()
-# Creating an empty list, with each element holding the number sign count for the ending of an individual line
-individual_line_ending_number_sign_count = list()
-# Creating an empty list, with each element indicating the presence of a heading on an individual line
-individual_line_contains_heading = list()
+# Creating an empty dictionary, where the top-level key is the line number of an individual line, and the sub-items signify the following:
+# - a boolean value indicating the presence of a heading on that line
+# - a numerical value indicating the number sign count for the beginning of that line
+# - a numerical value indicating the number sign count for the ending of that line
+# The following YAML-formatted text is an example:
+# - line_number_1:
+#   line_beginning_number_sign_count: 1
+#   line_ending_number_sign_count: 3
+# - line_number_2:
+#   line_beginning_number_sign_count: 2
+#   line_ending_number_sign_count: 2
+document_headings_entire = {}
 
 # Determining the following things for the entire file:
 # - highest heading number
@@ -152,7 +158,6 @@ with open(input_filename, "r") as opened_file:
         if current_line_string.startswith(number_sign_and_space_character_combination_indicating_a_heading) or (len(current_line_string) >= 1 and len(current_line_string) <= 6 and all(current_character == '#' for current_character in current_line_string)):
             # Assignment to indicate that at least one heading exists
             at_least_one_heading_exists = True
-            individual_line_contains_heading.append(True)
             total_heading_count += 1
             # Determining how many number signs exist consecutively at the *beginning* of the line
             total_consecutive_number_signs_at_beginning_of_line = 0
@@ -161,8 +166,9 @@ with open(input_filename, "r") as opened_file:
                     total_consecutive_number_signs_at_beginning_of_line += 1
                 else:
                     break
-            # Appending this line's total number of consecutive number signs at the *beginning* of the line to a list containing this information for all relevant lines
-            individual_line_beginning_number_sign_count.append(total_consecutive_number_signs_at_beginning_of_line)
+            # Appending this line's total number of consecutive number signs at the *beginning* of the line to a dictionary containing this information for all relevant lines
+            document_headings_entire[current_line_number] = {}
+            document_headings_entire[current_line_number]["line_beginning_number_sign_count"] = total_consecutive_number_signs_at_beginning_of_line
             # Determining the highest and lowest heading numbers
             if calculation_started == False:
                 highest_heading_number = total_consecutive_number_signs_at_beginning_of_line
@@ -179,12 +185,10 @@ with open(input_filename, "r") as opened_file:
                     total_consecutive_number_signs_at_end_of_line += 1
                 else:
                     break
-            # Appending this line's total number of consecutive number signs at the *end* of the line to a list containing this information for all relevant lines
-            individual_line_ending_number_sign_count.append(total_consecutive_number_signs_at_end_of_line)
-        else:
-            individual_line_beginning_number_sign_count.append(None)
-            individual_line_ending_number_sign_count.append(None)
-            individual_line_contains_heading.append(False)
+            # Appending this line's total number of consecutive number signs at the *end* of the line to a dictionary containing this information for all relevant lines
+            if total_consecutive_number_signs_at_end_of_line > 0:
+                document_headings_entire[current_line_number]["line_ending_number_sign_count"] = total_consecutive_number_signs_at_end_of_line
+                print(document_headings_entire)
     # Resetting file object position to beginning of file
     opened_file.seek(0)
 
@@ -221,16 +225,16 @@ if decrease_overall_heading_level_maximally == True or increase_overall_heading_
             for current_line_string in opened_file:
                 # Removing newlines
                 current_line_string = current_line_string.rstrip('\n')
-                if decrease_overall_heading_level_in_either_case == True and individual_line_contains_heading[current_line_number]:
+                # Incrementing to keep track of the current line number
+                current_line_number += 1
+                if decrease_overall_heading_level_in_either_case == True and (current_line_number in document_headings_entire):
                     # If a line contains a heading, write a slice of that line excluding the first *N* characters, where *N* is specified in the `number_of_heading_levels_to_decrease_in_either_case` identifier.
                     current_line_string = current_line_string[number_of_heading_levels_to_decrease_in_either_case:]
-                elif increase_overall_heading_level_in_either_case == True and individual_line_contains_heading[current_line_number]:
+                elif increase_overall_heading_level_in_either_case == True and (current_line_number in document_headings_entire):
                     # If a line contains a heading, write a string of number signs of *N* length, where *N* is specified in the `number_of_heading_levels_to_increase_in_either_case` identifier.
                     current_line_string = (NUMBER_SIGN * number_of_heading_levels_to_increase_in_either_case) + current_line_string
                 # Writing the line to a temporary file
                 temporary_file.write("{}\n".format(current_line_string))
-                # Incrementing to keep track of the current line number
-                current_line_number += 1
         # Writing the file in place
         if write_in_place == True:
             # Resetting file object position to beginning of file
@@ -268,15 +272,15 @@ if diagnostic == True:
             print("The highest heading level is ",highest_heading_number,".", sep='')
             print("The lowest heading level is ",lowest_heading_number,".", sep='')
             for current_line_string in opened_file:
-                if individual_line_contains_heading[current_line_number]:
-                    print("Line",current_line_number + 1,"contains a heading.")
-                    if individual_line_ending_number_sign_count[current_line_number]:
-                        print("The beginning number sign count is ",individual_line_beginning_number_sign_count[current_line_number],", and the ending number sign count is ",individual_line_ending_number_sign_count[current_line_number],".", sep='')
-                    else:
-                        print("The beginning number sign count is ",individual_line_beginning_number_sign_count[current_line_number],".", sep='')
-                else:
-                    print("Line",current_line_number + 1,"does not contain a heading.")
                 # Incrementing to keep track of the current line number
                 current_line_number += 1
+                if current_line_number in document_headings_entire:
+                    print("Line",current_line_number,"contains a heading.")
+                    if "line_ending_number_sign_count" in document_headings_entire[current_line_number]:
+                        print("The beginning number sign count is ",document_headings_entire[current_line_number]["line_beginning_number_sign_count"],", and the ending number sign count is ",document_headings_entire[current_line_number]["line_ending_number_sign_count"],".", sep='')
+                    else:
+                        print("The beginning number sign count is ",document_headings_entire[current_line_number]["line_beginning_number_sign_count"],".", sep='')
+                else:
+                    print("Line",current_line_number,"does not contain a heading.")
     elif at_least_one_heading_exists == False:
         print("No headings were found.")
