@@ -23,6 +23,7 @@ def initial_input():
     modification_to_be_made: false                       # an item with a boolean value indicating if changes should be made to the contents of the file
     input_filename: foo.bar                              # an item with a string value indicating the filename of the file to be used for input
     executing_from_terminal: false                       # an item with a boolean value indicating if the program is executing from a terminal
+    remove_trailing_number_signs_from_headings: false    # an item with a boolean value indicating if trailing number signs should be removed from headings
     ```
     """
     
@@ -34,9 +35,11 @@ def initial_input():
     modification_group = parser.add_argument_group('modification arguments', 'By default, the relative hierarchical differences between headings will be preserved.')
     modification_group.add_argument("+H", dest="plus_H", help="increase overall heading level by a numerical amount from 1-5, or *max* for maximum allowable amount", default=None)
     modification_group.add_argument("-H", dest="minus_H", help="decrease overall heading level by a numerical amount from 1-5, or *max* for maximum allowable amount", default=None)
+    modification_group.add_argument("-r", "--remove", help="remove content, *H* to remove trailing number signs from headings", default=None)
     mutually_exclusive_modification_group = modification_group.add_mutually_exclusive_group()
     mutually_exclusive_modification_group.add_argument("--heading-decrease-max", help="decrease overall heading level by maximum allowable amount", action="store_true")
     mutually_exclusive_modification_group.add_argument("--heading-increase-max", help="increase overall heading level by maximum allowable amount", action="store_true")
+    
     args = parser.parse_args()
 
     # Creating a dictionary to hold command-line-related information
@@ -66,6 +69,11 @@ def initial_input():
         initial_input["increase_overall_heading_level_maximally"] = True
     else:
         initial_input["increase_overall_heading_level_maximally"] = False
+    
+    if args.remove == "H":
+        initial_input["remove_trailing_number_signs_from_headings"] = True
+    else:
+        initial_input["remove_trailing_number_signs_from_headings"] = False
 
     # Determining if `minus_H` has a string that should be converted to an integer value
     if args.minus_H != None and args.minus_H != "max":
@@ -91,7 +99,7 @@ def initial_input():
     else:
         initial_input["increase_overall_heading_level_numerically"] = False
 
-    if initial_input["decrease_overall_heading_level_maximally"] == True or initial_input["increase_overall_heading_level_maximally"] == True or initial_input["decrease_overall_heading_level_numerically"] == True or initial_input["increase_overall_heading_level_numerically"] == True:
+    if initial_input["decrease_overall_heading_level_maximally"] == True or initial_input["increase_overall_heading_level_maximally"] == True or initial_input["decrease_overall_heading_level_numerically"] == True or initial_input["increase_overall_heading_level_numerically"] == True or initial_input["remove_trailing_number_signs_from_headings"] == True:
         initial_input["modification_to_be_made"] = True
 
     # Input validation: at least one modification option is required in most cases.
@@ -233,9 +241,6 @@ def heading_analysis(input_filename):
         document_headings_entire["total_heading_count"] = total_heading_count
         document_headings_entire["highest_heading_number"] = highest_heading_number
         document_headings_entire["lowest_heading_number"] = lowest_heading_number
-    
-    ## Resetting the current line number
-    #current_line_number = 0
 
     return document_headings_entire
 
@@ -255,6 +260,7 @@ def heading_modification(information_from_command_line_input, document_headings_
     # Assignments to hold default values for maximizing output consistency
     file_contents_displayed = False
     
+    # Decreasing or increasing overall heading levels
     if information_from_command_line_input["decrease_overall_heading_level_maximally"] == True or information_from_command_line_input["increase_overall_heading_level_maximally"] == True or information_from_command_line_input["decrease_overall_heading_level_numerically"] == True or information_from_command_line_input["increase_overall_heading_level_numerically"] == True:
         # Creating temporary file to hold intermediate modifications
         with tempfile.TemporaryFile('w+') as temporary_file:
@@ -348,8 +354,6 @@ def diagnostic_display(input_filename, document_headings_entire):
                     print("Line",current_line_number,"does not contain a heading.")
     elif at_least_one_heading_exists == False:
         print("No headings were found.")
-
-print(diagnostic_display.__doc__)
 
 if information_from_command_line_input["diagnostic"] == True:
     diagnostic_display(information_from_command_line_input["input_filename"], document_headings_entire)
