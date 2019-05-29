@@ -159,10 +159,10 @@ def heading_analysis(input_filename):
     
     ```yaml
     line_numbers_containing_headings:         # a key containing heading-related information on the level of individual lines
-      1:                                      # a numerical value indicating the line number of a line containing a heading
+      1:                                      # a key with an identifier indicating the line number of a line containing a heading
         line_beginning_number_sign_count: 1   # a numerical value indicating the number sign count for the beginning of a line
         line_ending_number_sign_count: 3      # a numerical value indicating the number sign count for the ending of a line
-      2:                                      # a numerical value indicating the line number of a line containing a heading
+      2:                                      # a key with an identifier indicating the line number of a line containing a heading
         line_beginning_number_sign_count: 2   # a numerical value indicating the number sign count for the beginning of a line
     at_least_one_heading_exists: true         # an item with a boolean value indicating the presence of a heading on that line
     total_heading_count: 2                    # an item with a numerical value indicating the total heading count
