@@ -246,7 +246,7 @@ def heading_analysis(input_filename):
 
 document_headings_entire = heading_analysis(information_from_command_line_input["input_filename"])
 
-def heading_modification(information_from_command_line_input, document_headings_entire):
+def heading_modification(temporary_file, information_from_command_line_input, document_headings_entire):
     """Modify any existing headings in the contents of an input file.
     
     The following things can be accomplished:
@@ -257,77 +257,74 @@ def heading_modification(information_from_command_line_input, document_headings_
     - increase overall heading level by a numerical amount
     """
     
-    # Assignments to hold default values for maximizing output consistency
-    file_contents_displayed = False
-    
     # Decreasing or increasing overall heading levels
     if information_from_command_line_input["decrease_overall_heading_level_maximally"] == True or information_from_command_line_input["increase_overall_heading_level_maximally"] == True or information_from_command_line_input["decrease_overall_heading_level_numerically"] == True or information_from_command_line_input["increase_overall_heading_level_numerically"] == True:
-        # Creating temporary file to hold intermediate modifications
-        with tempfile.TemporaryFile('w+') as temporary_file:
-            with open(information_from_command_line_input["input_filename"], "r") as opened_file:
-                # Assignment to hold the current line number
-                current_line_number = 0
-                # Assignments to hold default values
-                number_of_heading_levels_to_decrease_in_either_case = 0
-                number_of_heading_levels_to_increase_in_either_case = 0
-                decrease_overall_heading_level_in_either_case = False
-                increase_overall_heading_level_in_either_case = False
-                # Determining how many levels to increase or decrease all headings
-                if (information_from_command_line_input["decrease_overall_heading_level_maximally"] == True) or (information_from_command_line_input["decrease_overall_heading_level_numerically"] == True and document_headings_entire["lowest_heading_number"] - information_from_command_line_input["number_of_heading_levels_to_decrease_numerically"] < 1):
-                    number_of_heading_levels_to_decrease_in_either_case = document_headings_entire["lowest_heading_number"] - 1
-                    decrease_overall_heading_level_in_either_case = True
-                elif (information_from_command_line_input["increase_overall_heading_level_maximally"] == True) or (information_from_command_line_input["increase_overall_heading_level_numerically"] == True and document_headings_entire["highest_heading_number"] + information_from_command_line_input["number_of_heading_levels_to_increase_numerically"] > 6):
-                    number_of_heading_levels_to_increase_in_either_case = 6 - document_headings_entire["highest_heading_number"]
-                    increase_overall_heading_level_in_either_case = True
-                elif information_from_command_line_input["decrease_overall_heading_level_numerically"] == True:
-                    number_of_heading_levels_to_decrease_in_either_case = information_from_command_line_input["number_of_heading_levels_to_decrease_numerically"]
-                    decrease_overall_heading_level_in_either_case = True
-                elif information_from_command_line_input["increase_overall_heading_level_numerically"] == True:
-                    number_of_heading_levels_to_increase_in_either_case = information_from_command_line_input["number_of_heading_levels_to_increase_numerically"]
-                    increase_overall_heading_level_in_either_case = True
-                for current_line_string in opened_file:
-                    # Removing newlines
-                    current_line_string = current_line_string.rstrip('\n')
-                    # Incrementing to keep track of the current line number
-                    current_line_number += 1
-                    if decrease_overall_heading_level_in_either_case == True and (current_line_number in document_headings_entire["line_numbers_containing_headings"]):
-                        # If a line contains a heading, write a slice of that line excluding the first *N* characters, where *N* is specified in the `number_of_heading_levels_to_decrease_in_either_case` identifier.
-                        current_line_string = current_line_string[number_of_heading_levels_to_decrease_in_either_case:]
-                    elif increase_overall_heading_level_in_either_case == True and (current_line_number in document_headings_entire["line_numbers_containing_headings"]):
-                        # If a line contains a heading, write a string of number signs of *N* length, where *N* is specified in the `number_of_heading_levels_to_increase_in_either_case` identifier.
-                        current_line_string = ('#' * number_of_heading_levels_to_increase_in_either_case) + current_line_string
-                    # Writing the line to a temporary file
-                    temporary_file.write("{}\n".format(current_line_string))
-            # Writing the file in place
-            if information_from_command_line_input["write_in_place"] == True:
-                # Resetting file object position to beginning of file
-                temporary_file.seek(0)
-                # Resetting the current line number
-                current_line_number = 0
-                with open(information_from_command_line_input["input_filename"], "w+") as opened_file:
-                    for current_line_string in temporary_file:
-                        opened_file.write("{}".format(current_line_string))
-            elif information_from_command_line_input["display_file_contents"] == True:
-                # Showing modifications done to temporary file before closing it
-                # Resetting file object position to beginning of file
-                temporary_file.seek(0)
-                file_contents_displayed = True
-                for current_line_string in temporary_file:
-                    print(current_line_string, end='')
-
-    # Displaying contents of the file
-    if information_from_command_line_input["display_file_contents"] == True and file_contents_displayed == False:
-        # Resetting the current line number
-        current_line_number = 0
         with open(information_from_command_line_input["input_filename"], "r") as opened_file:
+            # Assignment to hold the current line number
+            current_line_number = 0
+            # Assignments to hold default values
+            number_of_heading_levels_to_decrease_in_either_case = 0
+            number_of_heading_levels_to_increase_in_either_case = 0
+            decrease_overall_heading_level_in_either_case = False
+            increase_overall_heading_level_in_either_case = False
+            # Determining how many levels to increase or decrease all headings
+            if (information_from_command_line_input["decrease_overall_heading_level_maximally"] == True) or (information_from_command_line_input["decrease_overall_heading_level_numerically"] == True and document_headings_entire["lowest_heading_number"] - information_from_command_line_input["number_of_heading_levels_to_decrease_numerically"] < 1):
+                number_of_heading_levels_to_decrease_in_either_case = document_headings_entire["lowest_heading_number"] - 1
+                decrease_overall_heading_level_in_either_case = True
+            elif (information_from_command_line_input["increase_overall_heading_level_maximally"] == True) or (information_from_command_line_input["increase_overall_heading_level_numerically"] == True and document_headings_entire["highest_heading_number"] + information_from_command_line_input["number_of_heading_levels_to_increase_numerically"] > 6):
+                number_of_heading_levels_to_increase_in_either_case = 6 - document_headings_entire["highest_heading_number"]
+                increase_overall_heading_level_in_either_case = True
+            elif information_from_command_line_input["decrease_overall_heading_level_numerically"] == True:
+                number_of_heading_levels_to_decrease_in_either_case = information_from_command_line_input["number_of_heading_levels_to_decrease_numerically"]
+                decrease_overall_heading_level_in_either_case = True
+            elif information_from_command_line_input["increase_overall_heading_level_numerically"] == True:
+                number_of_heading_levels_to_increase_in_either_case = information_from_command_line_input["number_of_heading_levels_to_increase_numerically"]
+                increase_overall_heading_level_in_either_case = True
             for current_line_string in opened_file:
-                print(current_line_string, end='')
+                # Removing newlines
+                current_line_string = current_line_string.rstrip('\n')
+                # Incrementing to keep track of the current line number
+                current_line_number += 1
+                if decrease_overall_heading_level_in_either_case == True and (current_line_number in document_headings_entire["line_numbers_containing_headings"]):
+                    # If a line contains a heading, write a slice of that line excluding the first *N* characters, where *N* is specified in the `number_of_heading_levels_to_decrease_in_either_case` identifier.
+                    current_line_string = current_line_string[number_of_heading_levels_to_decrease_in_either_case:]
+                elif increase_overall_heading_level_in_either_case == True and (current_line_number in document_headings_entire["line_numbers_containing_headings"]):
+                    # If a line contains a heading, write a string of number signs of *N* length, where *N* is specified in the `number_of_heading_levels_to_increase_in_either_case` identifier.
+                    current_line_string = ('#' * number_of_heading_levels_to_increase_in_either_case) + current_line_string
+                # Writing the line to a temporary file
+                temporary_file.write("{}\n".format(current_line_string))
 
-    # Resetting the current line number
-    current_line_number = 0
+# Assignments to hold default values for maximizing output consistency
+file_contents_displayed = False
 
 if document_headings_entire["at_least_one_heading_exists"] == True:
-    heading_modification(information_from_command_line_input, document_headings_entire)
+    # Creating temporary file to hold intermediate modifications. The temporary file is created before calling a function so that the temporary file will still exist after exiting the function.
+    with tempfile.TemporaryFile('w+') as temporary_file:
+        heading_modification(temporary_file, information_from_command_line_input, document_headings_entire)
+        if information_from_command_line_input["write_in_place"] == True:
+            # Resetting file object position to beginning of file
+            temporary_file.seek(0)
+            # Resetting the current line number
+            current_line_number = 0
+            # Writing the file in place
+            with open(information_from_command_line_input["input_filename"], "w+") as opened_file:
+                for current_line_string in temporary_file:
+                    opened_file.write("{}".format(current_line_string))
+            # Changing assignment so that the contents of the file are not displayed after writing the file in place
+            information_from_command_line_input["display_file_contents"] = False
+        if information_from_command_line_input["display_file_contents"] == True:
+            # Showing modifications done to temporary file before closing it
+            # Resetting file object position to beginning of file
+            temporary_file.seek(0)
+            file_contents_displayed = True
+            for current_line_string in temporary_file:
+                print(current_line_string, end='')
+
+# Displaying contents of the file
+if information_from_command_line_input["display_file_contents"] == True and file_contents_displayed == False:
+    with open(information_from_command_line_input["input_filename"], "r") as opened_file:
+        for current_line_string in opened_file:
+            print(current_line_string, end='')
 
 def diagnostic_display(input_filename, document_headings_entire):
     "Display diagnostic information about the contents of the file."
