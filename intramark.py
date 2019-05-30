@@ -60,20 +60,33 @@ def initial_input():
     else:
         initial_input["write_in_place"] = False
 
-    if args.heading_decrease_max == True or args.minus_H == "max":
-        initial_input["decrease_overall_heading_level_maximally"] = True
-    else:
-        initial_input["decrease_overall_heading_level_maximally"] = False
-
+    # Code related to `plus_H` argument begins
+    
     if args.heading_increase_max == True or args.plus_H == "max":
         initial_input["increase_overall_heading_level_maximally"] = True
     else:
         initial_input["increase_overall_heading_level_maximally"] = False
-    
-    if args.remove == "H-end":
-        initial_input["remove_trailing_number_signs_from_headings"] = True
+
+    # Determining if `plus_H` has a string that should be converted to an integer value
+    if args.plus_H != None and args.plus_H != "max":
+        if int(args.plus_H) >= 1 and int(args.plus_H) <= 5:
+            initial_input["increase_overall_heading_level_numerically"] = True
+            initial_input["number_of_heading_levels_to_increase_numerically"] = int(args.plus_H)
+        else:
+            print("\nInvalid input:".upper(),"acceptable values for *+H* are *max* or *1-5*.\n")
+            parser.print_help()
+            exit()
     else:
-        initial_input["remove_trailing_number_signs_from_headings"] = False
+        initial_input["increase_overall_heading_level_numerically"] = False
+    
+    # Code related to `plus_H` argument ends
+
+    # Code related to `minus_H` argument begins
+
+    if args.heading_decrease_max == True or args.minus_H == "max":
+        initial_input["decrease_overall_heading_level_maximally"] = True
+    else:
+        initial_input["decrease_overall_heading_level_maximally"] = False
 
     # Determining if `minus_H` has a string that should be converted to an integer value
     if args.minus_H != None and args.minus_H != "max":
@@ -87,17 +100,17 @@ def initial_input():
     else:
         initial_input["decrease_overall_heading_level_numerically"] = False
 
-    # Determining if `plus_H` has a string that should be converted to an integer value
-    if args.plus_H != None and args.plus_H != "max":
-        if int(args.plus_H) >= 1 and int(args.plus_H) <= 5:
-            initial_input["increase_overall_heading_level_numerically"] = True
-            initial_input["number_of_heading_levels_to_increase_numerically"] = int(args.plus_H)
-        else:
-            print("\nInvalid input:".upper(),"acceptable values for *+H* are *max* or *1-5*.\n")
-            parser.print_help()
-            exit()
+    # Code related to `minus_H` argument ends
+
+    if args.remove == "H-end":
+        initial_input["remove_trailing_number_signs_from_headings"] = True
+    elif args.remove != None:
+        # In this situation, an invalid value has been provided
+        print("\nInvalid input:".upper(),"the only acceptable value for *-r* is *H-end*.\n")
+        parser.print_help()
+        exit()
     else:
-        initial_input["increase_overall_heading_level_numerically"] = False
+        initial_input["remove_trailing_number_signs_from_headings"] = False
 
     if initial_input["decrease_overall_heading_level_maximally"] == True or initial_input["increase_overall_heading_level_maximally"] == True or initial_input["decrease_overall_heading_level_numerically"] == True or initial_input["increase_overall_heading_level_numerically"] == True or initial_input["remove_trailing_number_signs_from_headings"] == True:
         initial_input["modification_to_be_made"] = True
