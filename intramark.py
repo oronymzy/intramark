@@ -35,7 +35,7 @@ def initial_input():
     modification_group = parser.add_argument_group('modification arguments', 'By default, the relative hierarchical differences between headings will be preserved.')
     modification_group.add_argument("+H", dest="plus_H", help="increase overall heading level by a numerical amount from 1-5, or *max* for maximum allowable amount", default=None)
     modification_group.add_argument("-H", dest="minus_H", help="decrease overall heading level by a numerical amount from 1-5, or *max* for maximum allowable amount", default=None)
-    modification_group.add_argument("-r", "--remove", help="remove content, *H* to remove trailing number signs from headings", default=None)
+    modification_group.add_argument("-r", "--remove", help="remove content, *H-end* to remove trailing number signs from headings", default=None)
     mutually_exclusive_modification_group = modification_group.add_mutually_exclusive_group()
     mutually_exclusive_modification_group.add_argument("--heading-decrease-max", help="decrease overall heading level by maximum allowable amount", action="store_true")
     mutually_exclusive_modification_group.add_argument("--heading-increase-max", help="increase overall heading level by maximum allowable amount", action="store_true")
@@ -70,7 +70,7 @@ def initial_input():
     else:
         initial_input["increase_overall_heading_level_maximally"] = False
     
-    if args.remove == "H":
+    if args.remove == "H-end":
         initial_input["remove_trailing_number_signs_from_headings"] = True
     else:
         initial_input["remove_trailing_number_signs_from_headings"] = False
@@ -297,7 +297,7 @@ def heading_modification(temporary_file, information_from_command_line_input, do
 # Assignments to hold default values for maximizing output consistency
 file_contents_displayed = False
 
-if document_headings_entire["at_least_one_heading_exists"] == True:
+if document_headings_entire["at_least_one_heading_exists"] == True and information_from_command_line_input["modification_to_be_made"] == True:
     # Creating temporary file to hold intermediate modifications. The temporary file is created before calling a function so that the temporary file will still exist after exiting the function.
     with tempfile.TemporaryFile('w+') as temporary_file:
         heading_modification(temporary_file, information_from_command_line_input, document_headings_entire)
