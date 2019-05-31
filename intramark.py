@@ -2,6 +2,7 @@
 import argparse
 import os
 import os.path
+import re
 import sys
 import tempfile
 
@@ -181,11 +182,19 @@ def heading_analysis(input_filename):
     total_heading_count: 2                    # an item with a numerical value indicating the total heading count
     highest_heading_number: 2                 # an item with a numerical value indicating the highest heading number
     lowest_heading_number: 1                  # an item with a numerical value indicating the lowest heading number
+    
+    Using a regular expression, a line is determined to contain a heading *if the following is true*:
+    
+    `^((\s)\2{0,2})?`
+    : The line *optionally* starts with up to 3 space characters...
+    
+    `((#)\4{0,5})`
+    : ...followed by between 1 and 6 number signs...
+    
+    `($| )`
+    : ...followed by the end of the line *or* by a space character.
     ```
     """
-    # Creating a tuple containing all possible number sign combinations that indicate headings
-    number_sign_and_space_character_combination_indicating_a_heading = ("# ", "## ", "### ", "#### ", "##### ", "###### ")
-
     # Creating a dictionary to hold heading-related information
     document_headings_entire = {}
     document_headings_entire["line_numbers_containing_headings"] = {}
@@ -206,10 +215,8 @@ def heading_analysis(input_filename):
             current_line_string = current_line_string.rstrip('\n')
             # Incrementing to keep track of the current line number
             current_line_number += 1
-            # Determining if the current line contains a heading by determining either of the following things for the current line:
-            # - it starts with a number-sign-and-space combination found in the `number_sign_and_space_character_combination_indicating_a_heading` tuple
-            # - it is between 1 and 6 characters long, and all characters are number signs, following the CommonMark speficication that the number signs in a heading can be followed by a newline
-            if current_line_string.startswith(number_sign_and_space_character_combination_indicating_a_heading) or (len(current_line_string) >= 1 and len(current_line_string) <= 6 and all(current_character == '#' for current_character in current_line_string)):
+            # Determining with a regular expression (explained in the docstring) if the current line contains a heading according to the CommonMark speficication
+            if re.search(r'^((\s)\2{0,2})?((#)\4{0,5})($|\s)', current_line_string) != None:
                 # Assignment to indicate that at least one heading exists
                 at_least_one_heading_exists = True
                 total_heading_count += 1
