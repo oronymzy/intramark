@@ -36,7 +36,7 @@ def initial_input():
     modification_group = parser.add_argument_group('modification arguments', 'By default, the relative hierarchical differences between headings will be preserved.')
     modification_group.add_argument("+H", dest="plus_H", help="increase overall heading level by a numerical amount from 1-5, or *max* for maximum allowable amount", default=None)
     modification_group.add_argument("-H", dest="minus_H", help="decrease overall heading level by a numerical amount from 1-5, or *max* for maximum allowable amount", default=None)
-    modification_group.add_argument("-r", "--remove", help="remove content, *H-end* to remove trailing number signs from headings", default=None)
+    modification_group.add_argument("-r", "--remove", help="remove content, *H-end* to remove trailing number signs and spaces from headings", default=None)
     mutually_exclusive_modification_group = modification_group.add_mutually_exclusive_group()
     mutually_exclusive_modification_group.add_argument("--heading-decrease-max", help="decrease overall heading level by maximum allowable amount", action="store_true")
     mutually_exclusive_modification_group.add_argument("--heading-increase-max", help="increase overall heading level by maximum allowable amount", action="store_true")
@@ -286,43 +286,53 @@ def heading_modification(temporary_file, information_from_command_line_input, do
     - increase overall heading level maximally
     - increase overall heading level by a numerical amount
     """
-    
-    # Decreasing or increasing overall heading levels
-    if information_from_command_line_input["decrease_overall_heading_level_maximally"] == True or information_from_command_line_input["increase_overall_heading_level_maximally"] == True or information_from_command_line_input["decrease_overall_heading_level_numerically"] == True or information_from_command_line_input["increase_overall_heading_level_numerically"] == True:
-        with open(information_from_command_line_input["input_filename"], "r") as opened_file:
-            # Assignment to hold the current line number
-            current_line_number = 0
-            # Assignments to hold default values
-            number_of_heading_levels_to_decrease_in_either_case = 0
-            number_of_heading_levels_to_increase_in_either_case = 0
-            decrease_overall_heading_level_in_either_case = False
-            increase_overall_heading_level_in_either_case = False
-            # Determining how many levels to increase or decrease all headings
-            if (information_from_command_line_input["decrease_overall_heading_level_maximally"] == True) or (information_from_command_line_input["decrease_overall_heading_level_numerically"] == True and document_headings_entire["lowest_heading_number"] - information_from_command_line_input["number_of_heading_levels_to_decrease_numerically"] < 1):
-                number_of_heading_levels_to_decrease_in_either_case = document_headings_entire["lowest_heading_number"] - 1
-                decrease_overall_heading_level_in_either_case = True
-            elif (information_from_command_line_input["increase_overall_heading_level_maximally"] == True) or (information_from_command_line_input["increase_overall_heading_level_numerically"] == True and document_headings_entire["highest_heading_number"] + information_from_command_line_input["number_of_heading_levels_to_increase_numerically"] > 6):
-                number_of_heading_levels_to_increase_in_either_case = 6 - document_headings_entire["highest_heading_number"]
-                increase_overall_heading_level_in_either_case = True
-            elif information_from_command_line_input["decrease_overall_heading_level_numerically"] == True:
-                number_of_heading_levels_to_decrease_in_either_case = information_from_command_line_input["number_of_heading_levels_to_decrease_numerically"]
-                decrease_overall_heading_level_in_either_case = True
-            elif information_from_command_line_input["increase_overall_heading_level_numerically"] == True:
-                number_of_heading_levels_to_increase_in_either_case = information_from_command_line_input["number_of_heading_levels_to_increase_numerically"]
-                increase_overall_heading_level_in_either_case = True
-            for current_line_string in opened_file:
-                # Removing newlines
-                current_line_string = current_line_string.rstrip('\n')
-                # Incrementing to keep track of the current line number
-                current_line_number += 1
+
+    with open(information_from_command_line_input["input_filename"], "r") as opened_file:
+        # Assignment to hold the current line number
+        current_line_number = 0
+        # Assignments to hold default values
+        number_of_heading_levels_to_decrease_in_either_case = 0
+        number_of_heading_levels_to_increase_in_either_case = 0
+        decrease_overall_heading_level_in_either_case = False
+        increase_overall_heading_level_in_either_case = False
+        # Determining how many levels to increase or decrease all headings
+        if (information_from_command_line_input["decrease_overall_heading_level_maximally"] == True) or (information_from_command_line_input["decrease_overall_heading_level_numerically"] == True and document_headings_entire["lowest_heading_number"] - information_from_command_line_input["number_of_heading_levels_to_decrease_numerically"] < 1):
+            number_of_heading_levels_to_decrease_in_either_case = document_headings_entire["lowest_heading_number"] - 1
+            decrease_overall_heading_level_in_either_case = True
+        elif (information_from_command_line_input["increase_overall_heading_level_maximally"] == True) or (information_from_command_line_input["increase_overall_heading_level_numerically"] == True and document_headings_entire["highest_heading_number"] + information_from_command_line_input["number_of_heading_levels_to_increase_numerically"] > 6):
+            number_of_heading_levels_to_increase_in_either_case = 6 - document_headings_entire["highest_heading_number"]
+            increase_overall_heading_level_in_either_case = True
+        elif information_from_command_line_input["decrease_overall_heading_level_numerically"] == True:
+            number_of_heading_levels_to_decrease_in_either_case = information_from_command_line_input["number_of_heading_levels_to_decrease_numerically"]
+            decrease_overall_heading_level_in_either_case = True
+        elif information_from_command_line_input["increase_overall_heading_level_numerically"] == True:
+            number_of_heading_levels_to_increase_in_either_case = information_from_command_line_input["number_of_heading_levels_to_increase_numerically"]
+            increase_overall_heading_level_in_either_case = True
+        for current_line_string in opened_file:
+            # Removing newlines
+            current_line_string = current_line_string.rstrip('\n')
+            # Incrementing to keep track of the current line number
+            current_line_number += 1
+            # Checking if the current line contains a heading
+            if (current_line_number in document_headings_entire["line_numbers_containing_headings"]):
+                # Decreasing or increasing overall heading levels
                 if decrease_overall_heading_level_in_either_case == True and (current_line_number in document_headings_entire["line_numbers_containing_headings"]):
-                    # If a line contains a heading, write a slice of that line excluding the first *N* characters, where *N* is specified in the `number_of_heading_levels_to_decrease_in_either_case` identifier.
+                    # Writing a slice of a line excluding the first *N* characters, where *N* is specified in the `number_of_heading_levels_to_decrease_in_either_case` identifier
                     current_line_string = current_line_string[number_of_heading_levels_to_decrease_in_either_case:]
                 elif increase_overall_heading_level_in_either_case == True and (current_line_number in document_headings_entire["line_numbers_containing_headings"]):
-                    # If a line contains a heading, write a string of number signs of *N* length, where *N* is specified in the `number_of_heading_levels_to_increase_in_either_case` identifier.
+                    # Writing a string of number signs of *N* length, where *N* is specified in the `number_of_heading_levels_to_increase_in_either_case` identifier
                     current_line_string = ('#' * number_of_heading_levels_to_increase_in_either_case) + current_line_string
-                # Writing the line to a temporary file
-                temporary_file.write("{}\n".format(current_line_string))
+                # Removing trailing number signs and spaces from headings
+                if information_from_command_line_input["remove_trailing_number_signs_from_headings"] == True and "line_ending_number_sign_count" in document_headings_entire["line_numbers_containing_headings"][current_line_number]:
+                    # Determining the number of trailing characters to remove. At minimum this will be a number equal to the trailing number sign count plus 1 for the required space character.
+                    number_of_trailing_characters_to_remove = document_headings_entire["line_numbers_containing_headings"][current_line_number]["line_ending_number_sign_count"] + 1
+                    # Determining if any post-number-sign space characters exist, and adding their count to the number of trailing characters to remove if they do exist
+                    if "line_ending_space_character_count" in document_headings_entire["line_numbers_containing_headings"][current_line_number]:
+                        number_of_trailing_characters_to_remove += document_headings_entire["line_numbers_containing_headings"][current_line_number]["line_ending_space_character_count"]
+                    # Removing a number of characters of *N* length, where *N* is specified in the `number_of_trailing_characters_to_remove` identifier
+                    current_line_string = current_line_string[:-number_of_trailing_characters_to_remove]
+            # Writing the line to a temporary file
+            temporary_file.write("{}\n".format(current_line_string))
 
 # Assignments to hold default values for maximizing output consistency
 file_contents_displayed = False
