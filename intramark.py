@@ -26,6 +26,7 @@ def initial_input():
     executing_from_terminal: false                                  # an item with a boolean value indicating if the program is executing from a terminal
     strip_trailing_number_signs_from_headings: false                # an item with a boolean value indicating if the heading trailing number sign count should be equalized with heading level
     equalize_heading_trailing_number_sign_count_with_heading_level  # an item with a boolean value indicating if trailing number signs should be stripped from headings
+    strip_all_heading_markup                                        # an item with a boolean value indicating if all heading markup text should be stripped
     ```
     """
     
@@ -38,7 +39,7 @@ def initial_input():
     modification_group.add_argument("+H", dest="plus_H", help="increase overall heading level by a numerical amount from 1-5, or *max* for maximum allowable amount", default=None)
     modification_group.add_argument("-H", dest="minus_H", help="decrease overall heading level by a numerical amount from 1-5, or *max* for maximum allowable amount", default=None)
     modification_group.add_argument("=H", dest="equals_H", help="equalize heading trailing number sign count with heading level", action="store_true")
-    modification_group.add_argument("-s", "--strip", help="strip away markup text, *H-end* to strip any trailing number signs and spaces from headings", default=None)
+    modification_group.add_argument("-s", "--strip", help="strip away markup text, *H* to strip all heading markup text, or *H-end* to strip only trailing number signs and spaces from headings", default=None)
     mutually_exclusive_modification_group = modification_group.add_mutually_exclusive_group()
     mutually_exclusive_modification_group.add_argument("--heading-decrease-max", help="decrease overall heading level by maximum allowable amount", action="store_true")
     mutually_exclusive_modification_group.add_argument("--heading-increase-max", help="increase overall heading level by maximum allowable amount", action="store_true")
@@ -109,18 +110,25 @@ def initial_input():
         initial_input["equalize_heading_trailing_number_sign_count_with_heading_level"] = True
     else:
         initial_input["equalize_heading_trailing_number_sign_count_with_heading_level"] = False
-
+    
+    # Code related to `strip` argument begins
+    
+    initial_input["strip_trailing_number_signs_from_headings"] = False
+    initial_input["strip_all_heading_markup"] = False
+    
     if args.strip == "H-end":
         initial_input["strip_trailing_number_signs_from_headings"] = True
+    elif args.strip == "H":
+        initial_input["strip_all_heading_markup"] = True
     elif args.strip != None:
         # In this situation, an invalid value has been provided
-        print("\nInvalid input:".upper(),"the only acceptable value for *-s/--strip* is *H-end*.\n")
+        print("\nInvalid input:".upper(),"the only acceptable values for *-s/--strip* are *H* and *H-end*.\n")
         parser.print_help()
         exit()
-    else:
-        initial_input["strip_trailing_number_signs_from_headings"] = False
+    
+    # Code related to `strip` argument ends
 
-    if initial_input["decrease_overall_heading_level_maximally"] == True or initial_input["increase_overall_heading_level_maximally"] == True or initial_input["decrease_overall_heading_level_numerically"] == True or initial_input["increase_overall_heading_level_numerically"] == True or initial_input["strip_trailing_number_signs_from_headings"] == True or initial_input["equalize_heading_trailing_number_sign_count_with_heading_level"] == True:
+    if initial_input["decrease_overall_heading_level_maximally"] == True or initial_input["increase_overall_heading_level_maximally"] == True or initial_input["decrease_overall_heading_level_numerically"] == True or initial_input["increase_overall_heading_level_numerically"] == True or initial_input["strip_trailing_number_signs_from_headings"] == True or initial_input["equalize_heading_trailing_number_sign_count_with_heading_level"] == True or initial_input["strip_all_heading_markup"] == True:
         initial_input["modification_to_be_made"] = True
 
     # Input validation: at least one modification option is required in most cases.
@@ -362,6 +370,9 @@ def heading_modification(temporary_file, information_from_command_line_input, do
                         number_of_trailing_characters_to_strip += document_headings_entire["line_numbers_containing_headings"][current_line_number]["line_ending_space_character_count"]
                     # Stripping a number of characters of *N* length, where *N* is specified in the `number_of_trailing_characters_to_strip` identifier
                     current_line_string = current_line_string[:-number_of_trailing_characters_to_strip]
+                # Stripping all heading markup by replacing a line with the heading content
+                if information_from_command_line_input["strip_all_heading_markup"] == True:
+                    current_line_string = document_headings_entire["line_numbers_containing_headings"][current_line_number]["heading_content"]
             # Writing the line to a temporary file
             temporary_file.write("{}\n".format(current_line_string))
 
