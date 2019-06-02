@@ -1,5 +1,7 @@
 # Intramark
-Analyze and modify Markdown-formatted text on the level of Markdown elements to make widespread changes to the text. Automate repetitive tasks that would be tedious to perform manually. The syntax follows [0.29 of the CommonMark Spec](https://spec.commonmark.org/0.29/).
+Analyze and modify Markdown-formatted text on the level of Markdown elements to make widespread changes to the text. Automate repetitive tasks that would be tedious to perform manually.
+
+The heading syntax follows [0.29 of the CommonMark Spec](https://spec.commonmark.org/0.29/), but other Markdown elements may not.
 
 | Note:
 |:-
