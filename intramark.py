@@ -138,7 +138,14 @@ def initial_input():
     
     # Code related to `strip` argument ends
 
-    if initial_input["decrease_overall_heading_level_maximally"] == True or initial_input["increase_overall_heading_level_maximally"] == True or initial_input["decrease_overall_heading_level_numerically"] == True or initial_input["increase_overall_heading_level_numerically"] == True or initial_input["strip_trailing_number_signs_from_headings"] == True or initial_input["equalize_heading_trailing_number_sign_count_with_heading_level"] == True or initial_input["strip_all_heading_markup"] == True or initial_input["annotate_headings"] == True:
+    if (initial_input["decrease_overall_heading_level_maximally"] == True or
+            initial_input["increase_overall_heading_level_maximally"] == True or
+            initial_input["decrease_overall_heading_level_numerically"] == True or
+            initial_input["increase_overall_heading_level_numerically"] == True or
+            initial_input["strip_trailing_number_signs_from_headings"] == True or
+            initial_input["equalize_heading_trailing_number_sign_count_with_heading_level"] == True or
+            initial_input["strip_all_heading_markup"] == True or
+            initial_input["annotate_headings"] == True):
         initial_input["modification_to_be_made"] = True
 
     # Input validation: at least one modification option is required in most cases.
