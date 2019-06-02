@@ -315,11 +315,14 @@ def heading_modification(temporary_file, information_from_command_line_input, do
             current_line_number += 1
             # Checking if the current line contains a heading
             if (current_line_number in document_headings_entire["line_numbers_containing_headings"]):
+                # Temporarily removing leading space characters, if any exist
+                if "line_beginning_space_character_count" in document_headings_entire["line_numbers_containing_headings"][current_line_number]:
+                    current_line_string = current_line_string[document_headings_entire["line_numbers_containing_headings"][current_line_number]["line_beginning_space_character_count"]:]
                 # Decreasing or increasing overall heading levels
-                if decrease_overall_heading_level_in_either_case == True and (current_line_number in document_headings_entire["line_numbers_containing_headings"]):
+                if decrease_overall_heading_level_in_either_case == True:
                     # Writing a slice of a line excluding the first *N* characters, where *N* is specified in the `number_of_heading_levels_to_decrease_in_either_case` identifier
                     current_line_string = current_line_string[number_of_heading_levels_to_decrease_in_either_case:]
-                elif increase_overall_heading_level_in_either_case == True and (current_line_number in document_headings_entire["line_numbers_containing_headings"]):
+                elif increase_overall_heading_level_in_either_case == True:
                     # Writing a string of number signs of *N* length, where *N* is specified in the `number_of_heading_levels_to_increase_in_either_case` identifier
                     current_line_string = ('#' * number_of_heading_levels_to_increase_in_either_case) + current_line_string
                 # Stripping trailing number signs and any post-number-sign space characters that exist from headings
@@ -331,6 +334,9 @@ def heading_modification(temporary_file, information_from_command_line_input, do
                         number_of_trailing_characters_to_strip += document_headings_entire["line_numbers_containing_headings"][current_line_number]["line_ending_space_character_count"]
                     # Stripping a number of characters of *N* length, where *N* is specified in the `number_of_trailing_characters_to_strip` identifier
                     current_line_string = current_line_string[:-number_of_trailing_characters_to_strip]
+                # Reintroducing temporarily-removed leading space characters, if any exist
+                if "line_beginning_space_character_count" in document_headings_entire["line_numbers_containing_headings"][current_line_number]:
+                    current_line_string = (' ' * document_headings_entire["line_numbers_containing_headings"][current_line_number]["line_beginning_space_character_count"]) + current_line_string
             # Writing the line to a temporary file
             temporary_file.write("{}\n".format(current_line_string))
 
