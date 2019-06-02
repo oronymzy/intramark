@@ -199,10 +199,10 @@ def heading_analysis(input_filename):
         line_ending_number_sign_count: 3         # a numerical value indicating the number sign count (0+) for the end of a line
         line_ending_space_character_count: 1     # a numerical value indicating the space character count (0+) for the end of a line
         heading_content: bar baz                 # a string value indicating the heading content
-    at_least_one_heading_exists: true         # an item with a boolean value indicating the presence of a heading on that line
-    total_heading_count: 2                    # an item with a numerical value indicating the total heading count
-    highest_heading_number: 2                 # an item with a numerical value indicating the highest heading number
-    lowest_heading_number: 1                  # an item with a numerical value indicating the lowest heading number
+    at_least_one_heading_exists: true            # an item with a boolean value indicating the presence of a heading on that line
+    total_heading_count: 2                       # an item with a numerical value indicating the total heading count
+    highest_heading_number: 2                    # an item with a numerical value indicating the highest heading number
+    lowest_heading_number: 1                     # an item with a numerical value indicating the lowest heading number
     ```
     
     Using a regular expression, a line is determined to contain a heading *if the following is true*:
@@ -243,28 +243,28 @@ def heading_analysis(input_filename):
             # Incrementing to keep track of the current line number
             current_line_number += 1
             # Determining with a regular expression (explained in the docstring) if the current line contains a heading according to the CommonMark speficication
-            current_line_string_regex_match_object = re.search(r'^(?P<leading_space_character_group>(?P<space_character_1>\s)(?P=space_character_1){0,2})?(?P<leading_heading_number_sign_group>(?P<number_sign_1>#)(?P=number_sign_1){0,5})($|\s)(?P<heading_content>.*?)(\s(?P<trailing_number_sign_group>(?P<number_sign_2>#)(?P=number_sign_2){0,})(?P<trailing_space_character_group>(?P<space_character_2>\s)(?P=space_character_2){0,})?)?$', current_line_string)
-            if current_line_string_regex_match_object != None:
+            current_line_string_heading_regex_match_object = re.search(r'^(?P<leading_space_character_group>(?P<space_character_1>\s)(?P=space_character_1){0,2})?(?P<leading_heading_number_sign_group>(?P<number_sign_1>#)(?P=number_sign_1){0,5})($|\s)(?P<heading_content>.*?)(\s(?P<trailing_number_sign_group>(?P<number_sign_2>#)(?P=number_sign_2){0,})(?P<trailing_space_character_group>(?P<space_character_2>\s)(?P=space_character_2){0,})?)?$', current_line_string)
+            if current_line_string_heading_regex_match_object != None:
                 # Assignment to indicate that at least one heading exists
                 at_least_one_heading_exists = True
                 total_heading_count += 1
                 # Determining how many number signs exist consecutively at the *beginning* of the line
-                total_consecutive_number_signs_at_beginning_of_line = len(current_line_string_regex_match_object.group("leading_heading_number_sign_group"))
+                total_consecutive_number_signs_at_beginning_of_line = len(current_line_string_heading_regex_match_object.group("leading_heading_number_sign_group"))
                 # Appending this line's total number of consecutive number signs at the *beginning* of the line, as well as any other space-and-number-sign-related information, to a dictionary containing this information for all relevant lines
                 document_headings_entire["line_numbers_containing_headings"][current_line_number] = {}
                 document_headings_entire["line_numbers_containing_headings"][current_line_number]["line_beginning_number_sign_count"] = total_consecutive_number_signs_at_beginning_of_line
                 # Determining how many pre-number-sign space characters (if any) exist consecutively at the *beginning* of the line
-                if current_line_string_regex_match_object.group("leading_space_character_group") != None:
-                    document_headings_entire["line_numbers_containing_headings"][current_line_number]["line_beginning_space_character_count"] = len(current_line_string_regex_match_object.group("leading_space_character_group"))
+                if current_line_string_heading_regex_match_object.group("leading_space_character_group") != None:
+                    document_headings_entire["line_numbers_containing_headings"][current_line_number]["line_beginning_space_character_count"] = len(current_line_string_heading_regex_match_object.group("leading_space_character_group"))
                 # Determining if any heading content exists for the line
-                if current_line_string_regex_match_object.group("heading_content") != None:
-                    document_headings_entire["line_numbers_containing_headings"][current_line_number]["heading_content"] = current_line_string_regex_match_object.group("heading_content")
+                if current_line_string_heading_regex_match_object.group("heading_content") != None:
+                    document_headings_entire["line_numbers_containing_headings"][current_line_number]["heading_content"] = current_line_string_heading_regex_match_object.group("heading_content")
                 # Determining how many optional number signs (if any) exist consecutively at the *end* of the line
-                if current_line_string_regex_match_object.group("trailing_number_sign_group") != None:
-                    document_headings_entire["line_numbers_containing_headings"][current_line_number]["line_ending_number_sign_count"] = len(current_line_string_regex_match_object.group("trailing_number_sign_group"))
+                if current_line_string_heading_regex_match_object.group("trailing_number_sign_group") != None:
+                    document_headings_entire["line_numbers_containing_headings"][current_line_number]["line_ending_number_sign_count"] = len(current_line_string_heading_regex_match_object.group("trailing_number_sign_group"))
                 # Determining how many optional post-number-sign space characters (if any) exist consecutively at the *end* of the line
-                if current_line_string_regex_match_object.group("trailing_space_character_group") != None:
-                    document_headings_entire["line_numbers_containing_headings"][current_line_number]["line_ending_space_character_count"] = len(current_line_string_regex_match_object.group("trailing_space_character_group"))
+                if current_line_string_heading_regex_match_object.group("trailing_space_character_group") != None:
+                    document_headings_entire["line_numbers_containing_headings"][current_line_number]["line_ending_space_character_count"] = len(current_line_string_heading_regex_match_object.group("trailing_space_character_group"))
                 # Determining the highest and lowest heading numbers
                 if calculation_started == False:
                     highest_heading_number = total_consecutive_number_signs_at_beginning_of_line
