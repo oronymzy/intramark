@@ -12,21 +12,22 @@ def initial_input():
     The `initial_input` dictionary holds command-line-related information in the following way:
     
     ```yaml
-    diagnostic: true                                                # an item with a boolean value indicating if diagnostic output should be displayed
-    display_file_contents: false                                    # an item with a boolean value indicating if the contents of the file should be displayed
-    write_in_place: false                                           # an item with a boolean value indicating if the file should be overwritten
-    decrease_overall_heading_level_maximally: false                 # an item with a boolean value indicating if the overall heading level should be decreased maximally
-    increase_overall_heading_level_maximally: false                 # an item with a boolean value indicating if the overall heading level should be increased maximally
-    decrease_overall_heading_level_numerically: false               # an item with a boolean value indicating if the overall heading level should be decreased by a numerical amount
-    number_of_heading_levels_to_decrease_numerically: 0             # an item with a numerical value indicating the number of heading levels to decrease numerically
-    increase_overall_heading_level_numerically: false               # an item with a boolean value indicating if the overall heading level should be increased by a numerical amount
-    number_of_heading_levels_to_increase_numerically: 0             # an item with a numerical value indicating the number of heading levels to increase numerically
-    modification_to_be_made: false                                  # an item with a boolean value indicating if changes should be made to the contents of the file
-    input_filename: foo.bar                                         # an item with a string value indicating the filename of the file to be used for input
-    executing_from_terminal: false                                  # an item with a boolean value indicating if the program is executing from a terminal
-    strip_trailing_number_signs_from_headings: false                # an item with a boolean value indicating if the heading trailing number sign count should be equalized with heading level
-    equalize_heading_trailing_number_sign_count_with_heading_level  # an item with a boolean value indicating if trailing number signs should be stripped from headings
-    strip_all_heading_markup                                        # an item with a boolean value indicating if all heading markup text should be stripped
+    diagnostic: true                                                       # an item with a boolean value indicating if diagnostic output should be displayed
+    display_file_contents: false                                           # an item with a boolean value indicating if the contents of the file should be displayed
+    write_in_place: false                                                  # an item with a boolean value indicating if the file should be overwritten
+    decrease_overall_heading_level_maximally: false                        # an item with a boolean value indicating if the overall heading level should be decreased maximally
+    increase_overall_heading_level_maximally: false                        # an item with a boolean value indicating if the overall heading level should be increased maximally
+    decrease_overall_heading_level_numerically: false                      # an item with a boolean value indicating if the overall heading level should be decreased by a numerical amount
+    number_of_heading_levels_to_decrease_numerically: 0                    # an item with a numerical value indicating the number of heading levels to decrease numerically
+    increase_overall_heading_level_numerically: false                      # an item with a boolean value indicating if the overall heading level should be increased by a numerical amount
+    number_of_heading_levels_to_increase_numerically: 0                    # an item with a numerical value indicating the number of heading levels to increase numerically
+    modification_to_be_made: false                                         # an item with a boolean value indicating if changes should be made to the contents of the file
+    input_filename: foo.bar                                                # an item with a string value indicating the filename of the file to be used for input
+    executing_from_terminal: false                                         # an item with a boolean value indicating if the program is executing from a terminal
+    strip_trailing_number_signs_from_headings: false                       # an item with a boolean value indicating if the heading trailing number sign count should be equalized with heading level
+    equalize_heading_trailing_number_sign_count_with_heading_level: false  # an item with a boolean value indicating if trailing number signs should be stripped from headings
+    strip_all_heading_markup: false                                        # an item with a boolean value indicating if all heading markup text should be stripped
+    annotate_headings: false                                               # an item with a boolean value indicating if explanatory text about a heading should be displayed instead of the heading itself
     ```
     """
     
@@ -36,6 +37,7 @@ def initial_input():
     parser.add_argument("-d", "--diagnostic", help="display diagnostic information on the provided input instead of providing output", action="store_true")
     parser.add_argument("-w", "--write-in-place", help="overwrite input file", action="store_true")
     modification_group = parser.add_argument_group('modification arguments', 'By default, the relative hierarchical differences between headings will be preserved.')
+    modification_group.add_argument("-A", "--annotate", help="display explanatory text about markup instead of displaying the markup itself, *H* to affect headings", default=None)
     modification_group.add_argument("+H", dest="plus_H", help="increase overall heading level by a numerical amount from 1-5, or *max* for maximum allowable amount", default=None)
     modification_group.add_argument("-H", dest="minus_H", help="decrease overall heading level by a numerical amount from 1-5, or *max* for maximum allowable amount", default=None)
     modification_group.add_argument("=H", dest="equals_H", help="equalize heading trailing number sign count with heading level", action="store_true")
@@ -63,6 +65,14 @@ def initial_input():
         initial_input["write_in_place"] = True
     else:
         initial_input["write_in_place"] = False
+
+    if args.annotate == "H":
+        initial_input["annotate_headings"] = True
+    elif args.annotate != None:
+        # In this situation, an invalid value has been provided
+        print("\nInvalid input:".upper(),"the only acceptable value for *-A/--annotate* is *H*.\n")
+        parser.print_help()
+        exit()
 
     # Code related to `plus_H` argument begins
     
@@ -128,7 +138,7 @@ def initial_input():
     
     # Code related to `strip` argument ends
 
-    if initial_input["decrease_overall_heading_level_maximally"] == True or initial_input["increase_overall_heading_level_maximally"] == True or initial_input["decrease_overall_heading_level_numerically"] == True or initial_input["increase_overall_heading_level_numerically"] == True or initial_input["strip_trailing_number_signs_from_headings"] == True or initial_input["equalize_heading_trailing_number_sign_count_with_heading_level"] == True or initial_input["strip_all_heading_markup"] == True:
+    if initial_input["decrease_overall_heading_level_maximally"] == True or initial_input["increase_overall_heading_level_maximally"] == True or initial_input["decrease_overall_heading_level_numerically"] == True or initial_input["increase_overall_heading_level_numerically"] == True or initial_input["strip_trailing_number_signs_from_headings"] == True or initial_input["equalize_heading_trailing_number_sign_count_with_heading_level"] == True or initial_input["strip_all_heading_markup"] == True or initial_input["annotate_headings"] == True:
         initial_input["modification_to_be_made"] = True
 
     # Input validation: at least one modification option is required in most cases.
@@ -299,7 +309,10 @@ def heading_modification(temporary_file, information_from_command_line_input, do
     - decrease overall heading level maximally
     - decrease overall heading level by a numerical amount
     - increase overall heading level maximally
+    - equalize heading trailing number sign count with heading level
     - increase overall heading level by a numerical amount
+    - strip all heading markup
+    - strip trailing number signs and any post-number-sign space characters that exist from headings
     """
 
     with open(information_from_command_line_input["input_filename"], "r") as opened_file:
@@ -361,6 +374,9 @@ def heading_modification(temporary_file, information_from_command_line_input, do
                 # Reintroducing temporarily-removed trailing space characters, if any exist
                 if "line_ending_space_character_count" in document_headings_entire["line_numbers_containing_headings"][current_line_number]:
                     current_line_string = current_line_string + (' ' * document_headings_entire["line_numbers_containing_headings"][current_line_number]["line_ending_space_character_count"])
+                # Annotating heading by replacing a line with explanatory text followed by heading content
+                if information_from_command_line_input["annotate_headings"] == True:
+                    current_line_string = "Level " + str(document_headings_entire["line_numbers_containing_headings"][current_line_number]["line_beginning_number_sign_count"]) + " heading. " + document_headings_entire["line_numbers_containing_headings"][current_line_number]["heading_content"]
                 # Stripping trailing number signs and any post-number-sign space characters that exist from headings
                 if information_from_command_line_input["strip_trailing_number_signs_from_headings"] == True and "line_ending_number_sign_count" in document_headings_entire["line_numbers_containing_headings"][current_line_number]:
                     # Determining the number of trailing characters to strip. At minimum this will be a number equal to the trailing number sign count plus 1 for the required space character.
