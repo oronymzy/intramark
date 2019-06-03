@@ -30,6 +30,7 @@ def initial_input():
     annotate_headings: false                                               # an item with a boolean value indicating if explanatory text about a heading should be displayed instead of the heading itself
     strip_all_line_breaks: false                                           # an item with a boolean value indicating if all line break markup text should be stripped
     modification_to_be_made_to_heading: false                              # an item with a boolean value indicating if changes should be made to a heading
+    modification_to_be_made_to_line_break: false                           # an item with a boolean value indicating if changes should be made to a line break
     ```
     """
     
@@ -55,6 +56,8 @@ def initial_input():
 
     # Assignments to hold default values for maximizing output consistency
     initial_input["modification_to_be_made"] = False
+    initial_input["modification_to_be_made_to_heading"] = False
+    initial_input["modification_to_be_made_to_line_break"] = False
     initial_input["display_file_contents"] = True
     initial_input["annotate_headings"] = False
 
@@ -144,15 +147,7 @@ def initial_input():
     
     # Code related to `strip` argument ends
 
-    if (initial_input["decrease_overall_heading_level_maximally"] == True or
-            initial_input["increase_overall_heading_level_maximally"] == True or
-            initial_input["decrease_overall_heading_level_numerically"] == True or
-            initial_input["increase_overall_heading_level_numerically"] == True or
-            initial_input["strip_trailing_number_signs_from_headings"] == True or
-            initial_input["equalize_heading_trailing_number_sign_count_with_heading_level"] == True or
-            initial_input["strip_all_heading_markup"] == True or
-            initial_input["annotate_headings"] == True):
-        initial_input["modification_to_be_made"] = True
+    # Determining if any modifications should be made to the contents of the input file
     if (initial_input["decrease_overall_heading_level_maximally"] == True or
             initial_input["increase_overall_heading_level_maximally"] == True or
             initial_input["decrease_overall_heading_level_numerically"] == True or
@@ -162,6 +157,11 @@ def initial_input():
             initial_input["strip_all_heading_markup"] == True or
             initial_input["annotate_headings"] == True):
         initial_input["modification_to_be_made_to_heading"] = True
+    if initial_input["strip_all_line_breaks"] == True:
+        initial_input["modification_to_be_made_to_line_break"] = True
+    if (initial_input["modification_to_be_made_to_heading"] == True or
+        initial_input["modification_to_be_made_to_line_break"] == True):
+        initial_input["modification_to_be_made"] = True
 
     # Input validation: at least one modification option is required in most cases.
     if initial_input["write_in_place"] == True and initial_input["modification_to_be_made"] == False:
@@ -296,8 +296,9 @@ def markup_analysis(input_filename):
                 total_heading_count += 1
                 # Determining how many number signs exist consecutively at the *beginning* of the line
                 total_consecutive_number_signs_at_beginning_of_line = len(current_line_string_heading_regex_match_object.group("leading_heading_number_sign_group"))
-                # Appending this line's total number of consecutive number signs at the *beginning* of the line, as well as any other space-and-number-sign-related information, to a dictionary containing this information for all relevant lines
+                # Appending this line's number to a dictionary, indicating that the current line contains a heading
                 document_markup_entire["heading"]["line_numbers_containing_headings"][current_line_number] = {}
+                # Appending this line's total number of consecutive number signs at the *beginning* of the line to a dictionary containing this information for all relevant lines
                 document_markup_entire["heading"]["line_numbers_containing_headings"][current_line_number]["line_beginning_number_sign_count"] = total_consecutive_number_signs_at_beginning_of_line
                 # Determining how many pre-number-sign space characters (if any) exist consecutively at the *beginning* of the line
                 if current_line_string_heading_regex_match_object.group("leading_space_character_group") != None:
@@ -322,12 +323,14 @@ def markup_analysis(input_filename):
                     lowest_heading_number = total_consecutive_number_signs_at_beginning_of_line
             # Determining with a regular expression if the current line ends with a hard line break
             current_line_string_line_break_with_two_or_more_space_characters_regex_match_object = re.search(r'\S(?P<two_or_more_consecutive_trailing_space_characters>(?P<space_character>\s)(?P=space_character){1,})$', current_line_string)
-            if current_line_string_line_break_with_two_or_more_space_characters_regex_match_object != None:
+            # Checking if the regular expression was matched, and also preventing potential conflict with headings, which cannot contain line breaks
+            if current_line_string_line_break_with_two_or_more_space_characters_regex_match_object != None and current_line_number not in document_markup_entire["heading"]["line_numbers_containing_headings"]:
                 # Assignment to indicate that at least one hard line break exists
                 at_least_one_hard_line_break_exists = True
                 total_hard_line_break_count += 1
-                # Appending this line's total number of trailing space characters to a dictionary containing this information for all relevant lines
+                # Appending this line's number to a dictionary, indicating that the current line contains a hard line break
                 document_markup_entire["break"]["line_numbers_containing_hard_line_breaks"][current_line_number] = {}
+                # Appending this line's total number of trailing space characters to a dictionary containing this information for all relevant lines
                 document_markup_entire["break"]["line_numbers_containing_hard_line_breaks"][current_line_number]["consecutive_trailing_space_character_count"] = len(current_line_string_line_break_with_two_or_more_space_characters_regex_match_object.group("two_or_more_consecutive_trailing_space_characters"))
         # Resetting file object position to beginning of file
         opened_file.seek(0)
@@ -385,66 +388,84 @@ def markup_modification(temporary_file, information_from_command_line_input, doc
             elif information_from_command_line_input["increase_overall_heading_level_numerically"] == True:
                 number_of_heading_levels_to_increase_in_either_case = information_from_command_line_input["number_of_heading_levels_to_increase_numerically"]
                 increase_overall_heading_level_in_either_case = True
-            for current_line_string in opened_file:
-                # Stripping newlines
-                current_line_string = current_line_string.rstrip('\n')
-                # Incrementing to keep track of the current line number
-                current_line_number += 1
-                # Checking if the current line contains a heading
-                if (current_line_number in document_markup_entire["heading"]["line_numbers_containing_headings"]):
-                    # Removing leading space characters temporarily, if any exist
-                    if "line_beginning_space_character_count" in document_markup_entire["heading"]["line_numbers_containing_headings"][current_line_number]:
-                        current_line_string = current_line_string[document_markup_entire["heading"]["line_numbers_containing_headings"][current_line_number]["line_beginning_space_character_count"]:]
-                    # Decreasing or increasing overall heading levels
-                    if decrease_overall_heading_level_in_either_case == True:
-                        document_markup_entire["heading"]["line_numbers_containing_headings"][current_line_number]["line_beginning_number_sign_count"] -= number_of_heading_levels_to_decrease_in_either_case
-                        # Writing a slice of a line excluding the first *N* characters, where *N* is specified in the `number_of_heading_levels_to_decrease_in_either_case` identifier
-                        current_line_string = current_line_string[number_of_heading_levels_to_decrease_in_either_case:]
-                    elif increase_overall_heading_level_in_either_case == True:
-                        document_markup_entire["heading"]["line_numbers_containing_headings"][current_line_number]["line_beginning_number_sign_count"] += number_of_heading_levels_to_increase_in_either_case
-                        # Writing a string of number signs of *N* length, where *N* is specified in the `number_of_heading_levels_to_increase_in_either_case` identifier
-                        current_line_string = ('#' * number_of_heading_levels_to_increase_in_either_case) + current_line_string
-                    # Reintroducing temporarily-removed leading space characters, if any exist
-                    if "line_beginning_space_character_count" in document_markup_entire["heading"]["line_numbers_containing_headings"][current_line_number]:
-                        current_line_string = (' ' * document_markup_entire["heading"]["line_numbers_containing_headings"][current_line_number]["line_beginning_space_character_count"]) + current_line_string
-                    # Removing trailing space characters temporarily, if any exist
+        for current_line_string in opened_file:
+            # Stripping newlines
+            current_line_string = current_line_string.rstrip('\n')
+            # Incrementing to keep track of the current line number
+            current_line_number += 1
+            # Checking if the current line contains a heading to be modified
+            if (current_line_number in document_markup_entire["heading"]["line_numbers_containing_headings"] and
+                    information_from_command_line_input["modification_to_be_made_to_heading"] == True):
+                # Removing leading space characters temporarily, if any exist
+                if "line_beginning_space_character_count" in document_markup_entire["heading"]["line_numbers_containing_headings"][current_line_number]:
+                    current_line_string = current_line_string[document_markup_entire["heading"]["line_numbers_containing_headings"][current_line_number]["line_beginning_space_character_count"]:]
+                # Decreasing or increasing overall heading levels
+                if decrease_overall_heading_level_in_either_case == True:
+                    document_markup_entire["heading"]["line_numbers_containing_headings"][current_line_number]["line_beginning_number_sign_count"] -= number_of_heading_levels_to_decrease_in_either_case
+                    # Writing a slice of a line excluding the first *N* characters, where *N* is specified in the `number_of_heading_levels_to_decrease_in_either_case` identifier
+                    current_line_string = current_line_string[number_of_heading_levels_to_decrease_in_either_case:]
+                elif increase_overall_heading_level_in_either_case == True:
+                    document_markup_entire["heading"]["line_numbers_containing_headings"][current_line_number]["line_beginning_number_sign_count"] += number_of_heading_levels_to_increase_in_either_case
+                    # Writing a string of number signs of *N* length, where *N* is specified in the `number_of_heading_levels_to_increase_in_either_case` identifier
+                    current_line_string = ('#' * number_of_heading_levels_to_increase_in_either_case) + current_line_string
+                # Reintroducing temporarily-removed leading space characters, if any exist
+                if "line_beginning_space_character_count" in document_markup_entire["heading"]["line_numbers_containing_headings"][current_line_number]:
+                    current_line_string = (' ' * document_markup_entire["heading"]["line_numbers_containing_headings"][current_line_number]["line_beginning_space_character_count"]) + current_line_string
+                # Removing trailing space characters temporarily, if any exist
+                if "line_ending_space_character_count" in document_markup_entire["heading"]["line_numbers_containing_headings"][current_line_number]:
+                    current_line_string = current_line_string[:-document_markup_entire["heading"]["line_numbers_containing_headings"][current_line_number]["line_ending_space_character_count"]]
+                # Equalizing heading trailing number sign count with heading level
+                if information_from_command_line_input["equalize_heading_trailing_number_sign_count_with_heading_level"] == True and "line_ending_number_sign_count" in document_markup_entire["heading"]["line_numbers_containing_headings"][current_line_number]:
+                    if document_markup_entire["heading"]["line_numbers_containing_headings"][current_line_number]["line_ending_number_sign_count"] > document_markup_entire["heading"]["line_numbers_containing_headings"][current_line_number]["line_beginning_number_sign_count"]:
+                        number_of_trailing_number_signs_to_remove = document_markup_entire["heading"]["line_numbers_containing_headings"][current_line_number]["line_ending_number_sign_count"] - document_markup_entire["heading"]["line_numbers_containing_headings"][current_line_number]["line_beginning_number_sign_count"]
+                        # Removing a number of characters of *N* length, where *N* is specified in the `number_of_trailing_number_signs_to_remove` identifier
+                        current_line_string = current_line_string[:-number_of_trailing_number_signs_to_remove]
+                    elif document_markup_entire["heading"]["line_numbers_containing_headings"][current_line_number]["line_ending_number_sign_count"] < document_markup_entire["heading"]["line_numbers_containing_headings"][current_line_number]["line_beginning_number_sign_count"]:
+                        number_of_trailing_number_signs_to_add = document_markup_entire["heading"]["line_numbers_containing_headings"][current_line_number]["line_beginning_number_sign_count"] - document_markup_entire["heading"]["line_numbers_containing_headings"][current_line_number]["line_ending_number_sign_count"]
+                        # Writing a string of number signs of *N* length, where *N* is specified in the `number_of_trailing_number_signs_to_add` identifier
+                        current_line_string = current_line_string + ('#' * number_of_trailing_number_signs_to_add)
+                # Reintroducing temporarily-removed trailing space characters, if any exist
+                if "line_ending_space_character_count" in document_markup_entire["heading"]["line_numbers_containing_headings"][current_line_number]:
+                    current_line_string = current_line_string + (' ' * document_markup_entire["heading"]["line_numbers_containing_headings"][current_line_number]["line_ending_space_character_count"])
+                # Annotating heading by replacing a line with explanatory text followed by heading content
+                if information_from_command_line_input["annotate_headings"] == True:
+                    current_line_string = "Level " + str(document_markup_entire["heading"]["line_numbers_containing_headings"][current_line_number]["line_beginning_number_sign_count"]) + " heading. " + document_markup_entire["heading"]["line_numbers_containing_headings"][current_line_number]["heading_content"]
+                # Stripping trailing number signs and any post-number-sign space characters that exist from headings
+                if information_from_command_line_input["strip_trailing_number_signs_from_headings"] == True and "line_ending_number_sign_count" in document_markup_entire["heading"]["line_numbers_containing_headings"][current_line_number]:
+                    # Determining the number of trailing characters to strip. At minimum this will be a number equal to the trailing number sign count plus 1 for the required space character.
+                    number_of_trailing_characters_to_strip = document_markup_entire["heading"]["line_numbers_containing_headings"][current_line_number]["line_ending_number_sign_count"] + 1
+                    # Determining if any post-number-sign space characters exist, and adding their count to the number of trailing characters to strip if they do exist
                     if "line_ending_space_character_count" in document_markup_entire["heading"]["line_numbers_containing_headings"][current_line_number]:
-                        current_line_string = current_line_string[:-document_markup_entire["heading"]["line_numbers_containing_headings"][current_line_number]["line_ending_space_character_count"]]
-                    # Equalizing heading trailing number sign count with heading level
-                    if information_from_command_line_input["equalize_heading_trailing_number_sign_count_with_heading_level"] == True and "line_ending_number_sign_count" in document_markup_entire["heading"]["line_numbers_containing_headings"][current_line_number]:
-                        if document_markup_entire["heading"]["line_numbers_containing_headings"][current_line_number]["line_ending_number_sign_count"] > document_markup_entire["heading"]["line_numbers_containing_headings"][current_line_number]["line_beginning_number_sign_count"]:
-                            number_of_trailing_number_signs_to_remove = document_markup_entire["heading"]["line_numbers_containing_headings"][current_line_number]["line_ending_number_sign_count"] - document_markup_entire["heading"]["line_numbers_containing_headings"][current_line_number]["line_beginning_number_sign_count"]
-                            # Removing a number of characters of *N* length, where *N* is specified in the `number_of_trailing_number_signs_to_remove` identifier
-                            current_line_string = current_line_string[:-number_of_trailing_number_signs_to_remove]
-                        elif document_markup_entire["heading"]["line_numbers_containing_headings"][current_line_number]["line_ending_number_sign_count"] < document_markup_entire["heading"]["line_numbers_containing_headings"][current_line_number]["line_beginning_number_sign_count"]:
-                            number_of_trailing_number_signs_to_add = document_markup_entire["heading"]["line_numbers_containing_headings"][current_line_number]["line_beginning_number_sign_count"] - document_markup_entire["heading"]["line_numbers_containing_headings"][current_line_number]["line_ending_number_sign_count"]
-                            # Writing a string of number signs of *N* length, where *N* is specified in the `number_of_trailing_number_signs_to_add` identifier
-                            current_line_string = current_line_string + ('#' * number_of_trailing_number_signs_to_add)
-                    # Reintroducing temporarily-removed trailing space characters, if any exist
-                    if "line_ending_space_character_count" in document_markup_entire["heading"]["line_numbers_containing_headings"][current_line_number]:
-                        current_line_string = current_line_string + (' ' * document_markup_entire["heading"]["line_numbers_containing_headings"][current_line_number]["line_ending_space_character_count"])
-                    # Annotating heading by replacing a line with explanatory text followed by heading content
-                    if information_from_command_line_input["annotate_headings"] == True:
-                        current_line_string = "Level " + str(document_markup_entire["heading"]["line_numbers_containing_headings"][current_line_number]["line_beginning_number_sign_count"]) + " heading. " + document_markup_entire["heading"]["line_numbers_containing_headings"][current_line_number]["heading_content"]
-                    # Stripping trailing number signs and any post-number-sign space characters that exist from headings
-                    if information_from_command_line_input["strip_trailing_number_signs_from_headings"] == True and "line_ending_number_sign_count" in document_markup_entire["heading"]["line_numbers_containing_headings"][current_line_number]:
-                        # Determining the number of trailing characters to strip. At minimum this will be a number equal to the trailing number sign count plus 1 for the required space character.
-                        number_of_trailing_characters_to_strip = document_markup_entire["heading"]["line_numbers_containing_headings"][current_line_number]["line_ending_number_sign_count"] + 1
-                        # Determining if any post-number-sign space characters exist, and adding their count to the number of trailing characters to strip if they do exist
-                        if "line_ending_space_character_count" in document_markup_entire["heading"]["line_numbers_containing_headings"][current_line_number]:
-                            number_of_trailing_characters_to_strip += document_markup_entire["heading"]["line_numbers_containing_headings"][current_line_number]["line_ending_space_character_count"]
-                        # Stripping a number of characters of *N* length, where *N* is specified in the `number_of_trailing_characters_to_strip` identifier
-                        current_line_string = current_line_string[:-number_of_trailing_characters_to_strip]
-                    # Stripping all heading markup by replacing a line with the heading content
-                    if information_from_command_line_input["strip_all_heading_markup"] == True:
-                        current_line_string = document_markup_entire["heading"]["line_numbers_containing_headings"][current_line_number]["heading_content"]
-                # Writing the line to a temporary file
-                temporary_file.write("{}\n".format(current_line_string))
+                        number_of_trailing_characters_to_strip += document_markup_entire["heading"]["line_numbers_containing_headings"][current_line_number]["line_ending_space_character_count"]
+                    # Stripping a number of characters of *N* length, where *N* is specified in the `number_of_trailing_characters_to_strip` identifier
+                    current_line_string = current_line_string[:-number_of_trailing_characters_to_strip]
+                # Stripping all heading markup by replacing a line with the heading content
+                if information_from_command_line_input["strip_all_heading_markup"] == True:
+                    current_line_string = document_markup_entire["heading"]["line_numbers_containing_headings"][current_line_number]["heading_content"]
+            # Checking if the current line contains a line break to be modified
+            if (current_line_number in document_markup_entire["break"]["line_numbers_containing_hard_line_breaks"] and
+                    information_from_command_line_input["modification_to_be_made_to_line_break"] == True):
+                # Stripping all line breaks
+                if information_from_command_line_input["strip_all_line_breaks"] == True:
+                    # Determining the number of trailing characters to strip
+                    number_of_trailing_characters_to_strip = document_markup_entire["break"]["line_numbers_containing_hard_line_breaks"][current_line_number]["consecutive_trailing_space_character_count"]
+                    # Stripping a number of characters of *N* length, where *N* is specified in the `number_of_trailing_characters_to_strip` identifier
+                    current_line_string = current_line_string[:-number_of_trailing_characters_to_strip]
+            # Writing the line to a temporary file
+            temporary_file.write("{}\n".format(current_line_string))
 
 # Assignments to hold default values for maximizing output consistency
 file_contents_displayed = False
+modifications_have_markup_to_modify = False
 
-if document_markup_entire["heading"]["at_least_one_heading_exists"] == True and information_from_command_line_input["modification_to_be_made"] == True:
+# Checking if specified modifications have any markup to modify
+if ((information_from_command_line_input["modification_to_be_made_to_heading"] == True and
+        document_markup_entire["heading"]["at_least_one_heading_exists"] == True) or
+        (information_from_command_line_input["modification_to_be_made_to_line_break"] == True and
+        document_markup_entire["break"]["at_least_one_hard_line_break_exists"] == True)):
+    modifications_have_markup_to_modify = True
+
+if modifications_have_markup_to_modify == True:
     # Creating temporary file to hold intermediate modifications. The temporary file is created before calling a function so that the temporary file will still exist after exiting the function.
     with tempfile.TemporaryFile('w+') as temporary_file:
         markup_modification(temporary_file, information_from_command_line_input, document_markup_entire)
