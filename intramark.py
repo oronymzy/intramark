@@ -28,6 +28,7 @@ def initial_input():
     equalize_heading_trailing_number_sign_count_with_heading_level: false  # an item with a boolean value indicating if trailing number signs should be stripped from headings
     strip_all_heading_markup: false                                        # an item with a boolean value indicating if all heading markup text should be stripped
     annotate_headings: false                                               # an item with a boolean value indicating if explanatory text about a heading should be displayed instead of the heading itself
+    strip_all_line_breaks: false                                           # an item with a boolean value indicating if all line break markup text should be stripped
     ```
     """
     
@@ -41,7 +42,7 @@ def initial_input():
     modification_group.add_argument("+H", dest="plus_H", help="increase overall heading level by a numerical amount from 1-5, or *max* for maximum allowable amount", default=None)
     modification_group.add_argument("-H", dest="minus_H", help="decrease overall heading level by a numerical amount from 1-5, or *max* for maximum allowable amount", default=None)
     modification_group.add_argument("=H", dest="equals_H", help="equalize heading trailing number sign count with heading level", action="store_true")
-    modification_group.add_argument("-s", "--strip", help="strip away markup text, *H* to strip all heading markup text, or *H-end* to strip only trailing number signs and spaces from headings", default=None)
+    modification_group.add_argument("-s", "--strip", help="strip away markup text, *H* to strip all heading markup text, *H-end* to strip only trailing number signs and spaces from headings, or *b* to strip line breaks", default=None)
     mutually_exclusive_modification_group = modification_group.add_mutually_exclusive_group()
     mutually_exclusive_modification_group.add_argument("--heading-decrease-max", help="decrease overall heading level by maximum allowable amount", action="store_true")
     mutually_exclusive_modification_group.add_argument("--heading-increase-max", help="increase overall heading level by maximum allowable amount", action="store_true")
@@ -54,6 +55,7 @@ def initial_input():
     # Assignments to hold default values for maximizing output consistency
     initial_input["modification_to_be_made"] = False
     initial_input["display_file_contents"] = True
+    initial_input["annotate_headings"] = False
 
     if args.diagnostic == True:
         initial_input["diagnostic"] = True
@@ -125,14 +127,17 @@ def initial_input():
     
     initial_input["strip_trailing_number_signs_from_headings"] = False
     initial_input["strip_all_heading_markup"] = False
+    initial_input["strip_all_line_breaks"] = False
     
     if args.strip == "H-end":
         initial_input["strip_trailing_number_signs_from_headings"] = True
     elif args.strip == "H":
         initial_input["strip_all_heading_markup"] = True
+    elif args.strip == "b":
+        initial_input["strip_all_line_breaks"] = True
     elif args.strip != None:
         # In this situation, an invalid value has been provided
-        print("\nInvalid input:".upper(),"the only acceptable values for *-s/--strip* are *H* and *H-end*.\n")
+        print("\nInvalid input:".upper(),"the only acceptable values for *-s/--strip* are *b*, *H*, and *H-end*.\n")
         parser.print_help()
         exit()
     
@@ -222,6 +227,15 @@ def heading_analysis(input_filename):
     lowest_heading_number: 1                     # an item with a numerical value indicating the lowest heading number
     ```
     
+    The `document_markup_entire` dictionary holds markup-related information in the following way:
+    
+    ```yaml
+    break:
+      line_numbers_containing_hard_line_breaks:
+        1:
+          consecutive_trailing_space_character_count: 2
+    ```
+    
     Using a regular expression, a line is determined to contain a heading *if the following is true*:
     
     `^(?P<leading_space_character_group>(?P<space_character_1>\s)(?P=space_character_1){0,2})?`
@@ -242,17 +256,26 @@ def heading_analysis(input_filename):
     # Creating a dictionary to hold heading-related information
     document_headings_entire = {}
     document_headings_entire["line_numbers_containing_headings"] = {}
+    
+    # Creating a dictionary to hold markup-related information
+    document_markup_entire = {}
+    document_markup_entire["break"] = {}
+    document_markup_entire["break"]["line_numbers_containing_hard_line_breaks"] = {}
 
     with open(input_filename, "r") as opened_file:
         # Assignment to hold the current line number
         current_line_number = 0
         # Assignment to indicate that there are no headings
         at_least_one_heading_exists = False
+        # Assignment to indicate that there are no hard line breaks
+        at_least_one_hard_line_break_exists = False
         # Assignment to hold the highest and lowest heading numbers
         highest_heading_number = None
         lowest_heading_number = None
         # Assignment to hold the total heading count
         total_heading_count = 0
+        # Assignment to hold the total hard line break count
+        total_hard_line_break_count = 0
         calculation_started = False
         for current_line_string in opened_file:
             # Stripping newlines
@@ -291,6 +314,15 @@ def heading_analysis(input_filename):
                     highest_heading_number = total_consecutive_number_signs_at_beginning_of_line
                 if total_consecutive_number_signs_at_beginning_of_line < lowest_heading_number:
                     lowest_heading_number = total_consecutive_number_signs_at_beginning_of_line
+            # Determining with a regular expression if the current line ends with a hard line break
+            current_line_string_line_break_with_two_or_more_space_characters_regex_match_object = re.search(r'\S(?P<two_or_more_consecutive_trailing_space_characters>(?P<space_character>\s)(?P=space_character){1,})$', current_line_string)
+            if current_line_string_line_break_with_two_or_more_space_characters_regex_match_object != None:
+                # Assignment to indicate that at least one hard line break exists
+                at_least_one_hard_line_break_exists = True
+                total_hard_line_break_count += 1
+                # Appending this line's total number of trailing space characters to a dictionary containing this information for all relevant lines
+                document_markup_entire["break"]["line_numbers_containing_hard_line_breaks"][current_line_number] = {}
+                document_markup_entire["break"]["line_numbers_containing_hard_line_breaks"][current_line_number]["consecutive_trailing_space_character_count"] = len(current_line_string_line_break_with_two_or_more_space_characters_regex_match_object.group("two_or_more_consecutive_trailing_space_characters"))
         # Resetting file object position to beginning of file
         opened_file.seek(0)
     
