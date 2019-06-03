@@ -133,17 +133,31 @@ def initial_input():
     initial_input["strip_all_heading_markup"] = False
     initial_input["strip_all_line_breaks"] = False
     
-    if args.strip == "H-end":
-        initial_input["strip_trailing_number_signs_from_headings"] = True
-    elif args.strip == "H":
-        initial_input["strip_all_heading_markup"] = True
-    elif args.strip == "b":
-        initial_input["strip_all_line_breaks"] = True
-    elif args.strip != None:
-        # In this situation, an invalid value has been provided
-        print("\nInvalid input:".upper(),"the only acceptable values for *-s/--strip* are *b*, *H*, and *H-end*.\n")
-        parser.print_help()
-        exit()
+    if args.strip != None:
+        if "b" in args.strip:
+            initial_input["strip_all_line_breaks"] = True
+        if args.strip.count("H") > 1:
+            if "H-end" in args.strip:
+                # In this situation, both `H` and `H-end` have been entered, and an invalid value has been provided
+                print("\nInvalid input:".upper(),"*H* and *H-end* are mutually exclusive values for *-s/--strip*.\n")
+                parser.print_help()
+                exit()
+            else:
+                # In this situation, an invalid value has been provided
+                print("\nInvalid input:".upper(),"the only acceptable values for *-s/--strip* are *b*, *H*, and *H-end*.\n")
+                parser.print_help()
+                exit()
+        if "H-end" in args.strip:
+            initial_input["strip_trailing_number_signs_from_headings"] = True
+        if "H" in args.strip and "H-end" not in args.strip:
+            initial_input["strip_all_heading_markup"] = True
+        if ("b" not in args.strip and
+                "H-end" not in args.strip and
+                "H" not in args.strip):
+            # In this situation, an invalid value has been provided
+            print("\nInvalid input:".upper(),"the only acceptable values for *-s/--strip* are *b*, *H*, and *H-end*.\n")
+            parser.print_help()
+            exit()
     
     # Code related to `strip` argument ends
 
