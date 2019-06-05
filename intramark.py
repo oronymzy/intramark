@@ -44,7 +44,7 @@ def initial_input():
     modification_group.add_argument("+H", dest="plus_H", help="increase overall heading level by a numerical amount from 1-5, or *max* for maximum allowable amount", default=None)
     modification_group.add_argument("-H", dest="minus_H", help="decrease overall heading level by a numerical amount from 1-5, or *max* for maximum allowable amount", default=None)
     modification_group.add_argument("=H", dest="equals_H", help="equalize heading trailing number sign count with heading level", action="store_true")
-    modification_group.add_argument("-s", "--strip", help="strip away markup text, *H* to strip all heading markup text, *H-end* to strip only trailing number signs and spaces from headings, or *b* to strip line breaks", default=None)
+    modification_group.add_argument("-s", "--strip", help="strip away markup text, *b* to strip line breaks, *H* to strip all heading markup text, or *H-end* to strip only trailing number signs and spaces from headings", default=None)
     mutually_exclusive_modification_group = modification_group.add_mutually_exclusive_group()
     mutually_exclusive_modification_group.add_argument("--heading-decrease-max", help="decrease overall heading level by maximum allowable amount", action="store_true")
     mutually_exclusive_modification_group.add_argument("--heading-increase-max", help="increase overall heading level by maximum allowable amount", action="store_true")
