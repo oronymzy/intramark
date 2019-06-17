@@ -546,9 +546,16 @@ def markup_analysis(input_filename):
                 document_markup_entire["break"]["line_numbers_containing_hard_line_breaks"][current_line_number] = {}
                 # Appending this line's total number of trailing space characters to a dictionary containing this information for all relevant lines
                 document_markup_entire["break"]["line_numbers_containing_hard_line_breaks"][current_line_number]["consecutive_trailing_space_character_count"] = len(current_line_string_line_break_with_two_or_more_space_characters_regex_match_object.group("two_or_more_consecutive_trailing_space_characters"))
+        # Removing any empty lists in “potential link label lines” dictionary
+        # A dictionary is copied to a list for the duration of the loop in order to allow removal of dictionary items *during* the loop
+        for potential_link_label_line in list(document_markup_entire["link"]["potential_link_label_lines"]):
+            # Removing any lines that contain no potential link label indexes
+            if not document_markup_entire["link"]["potential_link_label_lines"][potential_link_label_line]["potential_link_label_indexes"]:
+                del document_markup_entire["link"]["potential_link_label_lines"][potential_link_label_line]
         # Resetting file object position to beginning of file
         opened_file.seek(0)
-
+        
+        # for current_line_string in opened_file:
 
         ## Determining if any potential link labels match the link labels in link reference definitions
         #if bool(document_markup_entire["link"]["potential_link_label_lines"]) == True:
