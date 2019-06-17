@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+from collections import defaultdict
 import argparse
 import json
 import os
@@ -329,8 +330,6 @@ def markup_analysis(input_filename):
             total_hard_line_break_count = 0
             # Assignment to hold the total potential link label count
             total_potential_link_label_count = 0
-            # Assignment to hold the total potential footnote link label count
-            potential_footnote_link_label_count = 0
             # Assignment to hold the total inline link count
             inline_link_count = 0
 
@@ -367,16 +366,18 @@ def markup_analysis(input_filename):
                         # Creating multiple dictionaries to hold potential-link-label-related information on the current line number, if none exist.
                         # This code should only be executed once per line.
                         if current_line_number not in document_markup_entire["link"]["potential_link_label_lines"]:
-                            document_markup_entire["link"]["potential_link_label_lines"][current_line_number] = {}
-                            document_markup_entire["link"]["potential_link_label_lines"][current_line_number]["potential_link_label_indexes"] = {}
-                        # Creating multiple dictionaries to hold potential-link-label-related information on the current line number, if none exist.
-                        # This code should be executed for each potential link label found on the line.
-                        if potential_link_label_count not in document_markup_entire["link"]["potential_link_label_lines"][current_line_number]["potential_link_label_indexes"]:
-                            document_markup_entire["link"]["potential_link_label_lines"][current_line_number]["potential_link_label_indexes"][potential_link_label_count] = {}
-                            document_markup_entire["link"]["potential_link_label_lines"][current_line_number]["potential_link_label_indexes"][potential_link_label_count]["left_bracket_index"] = 0
-                            document_markup_entire["link"]["potential_link_label_lines"][current_line_number]["potential_link_label_indexes"][potential_link_label_count]["right_bracket_index"] = 0
-                        document_markup_entire["link"]["potential_link_label_lines"][current_line_number]["potential_link_label_indexes"][potential_link_label_count]["left_bracket_index"] = left_bracket_index
-                        document_markup_entire["link"]["potential_link_label_lines"][current_line_number]["potential_link_label_indexes"][potential_link_label_count]["right_bracket_index"] = right_bracket_index
+                            document_markup_entire["link"]["potential_link_label_lines"][current_line_number] = defaultdict(list)
+                            document_markup_entire["link"]["potential_link_label_lines"][current_line_number]["potential_link_label_indexes"]
+                        potential_link_label_already_stored = False
+                        # Determining if the list is not empty
+                        if document_markup_entire["link"]["potential_link_label_lines"][current_line_number]["potential_link_label_indexes"] == True:
+                            # Determining if any list items contain the indexes for the current potential link label
+                            for list_item in document_markup_entire["link"]["potential_link_label_lines"][current_line_number]["potential_link_label_indexes"]:
+                                if ("left_bracket_index" in list_item and list_item["left_bracket_index"] == left_bracket_index and
+                                    "right_bracket_index" in list_item and list_item["right_bracket_index"] == right_bracket_index):
+                                    potential_link_label_already_stored = True
+                        if potential_link_label_already_stored == False:
+                            document_markup_entire["link"]["potential_link_label_lines"][current_line_number]["potential_link_label_indexes"].append({"left_bracket_index": left_bracket_index, "right_bracket_index": right_bracket_index})
                         left_bracket_index = len(current_line_string)
                         right_bracket_index = 0
                 current_bracket_character_index += 1
@@ -385,30 +386,24 @@ def markup_analysis(input_filename):
             if current_line_number in document_markup_entire["link"]["potential_link_label_lines"]:
                 # A dictionary is copied to a list for the duration of the loop in order to allow removal of dictionary items *during* the loop
                 for potential_footnote_link_label_index in list(document_markup_entire["link"]["potential_link_label_lines"][current_line_number]["potential_link_label_indexes"]):
-                    if current_line_string[document_markup_entire["link"]["potential_link_label_lines"][current_line_number]["potential_link_label_indexes"][potential_footnote_link_label_index]["left_bracket_index"] + 1] == "^":
-                        potential_footnote_link_label_count += 1
+                    if current_line_string[potential_footnote_link_label_index["left_bracket_index"] + 1] == "^":
                         # Creating multiple dictionaries to hold potential-footnote-link-label-related information on the current line number, if none exist.
                         # This code should only be executed once per line.
                         if current_line_number not in document_markup_entire["link"]["potential_footnote_link_label_lines"]:
-                            document_markup_entire["link"]["potential_footnote_link_label_lines"][current_line_number] = {}
-                            document_markup_entire["link"]["potential_footnote_link_label_lines"][current_line_number]["potential_footnote_link_label_indexes"] = {}
-                        # Creating multiple dictionaries to hold potential-footnote-link-label-related information on the current line number, if none exist.
-                        # This code should be executed for each potential link label found on the line.
-                        if potential_footnote_link_label_count not in document_markup_entire["link"]["potential_footnote_link_label_lines"][current_line_number]["potential_footnote_link_label_indexes"]:
-                            document_markup_entire["link"]["potential_footnote_link_label_lines"][current_line_number]["potential_footnote_link_label_indexes"][potential_footnote_link_label_count] = {}
-                        # Copying potential footnote link label indexes from dictionary of potential-link-label positions to dictionary of potential-footnote-link-label positions, then removing copied values from dictionary of potential-link-label positions.
-                        # Warning: this may create gaps in the numerical sequence of sub-dictionary keys in `potential_link_label_indexes`.
-                        document_markup_entire["link"]["potential_footnote_link_label_lines"][current_line_number]["potential_footnote_link_label_indexes"][potential_footnote_link_label_count] = document_markup_entire["link"]["potential_link_label_lines"][current_line_number]["potential_link_label_indexes"].pop(potential_footnote_link_label_index)
-
+                            document_markup_entire["link"]["potential_footnote_link_label_lines"][current_line_number] = defaultdict(list)
+                            document_markup_entire["link"]["potential_footnote_link_label_lines"][current_line_number]["potential_footnote_link_label_indexes"]
+                        # Copying potential footnote link label indexes from list of potential-link-label positions to list of potential-footnote-link-label positions, then removing copied values from list of potential-link-label positions.
+                        document_markup_entire["link"]["potential_footnote_link_label_lines"][current_line_number]["potential_footnote_link_label_indexes"].append(potential_footnote_link_label_index)
+                        document_markup_entire["link"]["potential_link_label_lines"][current_line_number]["potential_link_label_indexes"].remove(potential_footnote_link_label_index)
             # Determining if any of the potential-footnote-link-label positions indicate footnote link reference definitions.
             # This is done by examining the character immediately following the right bracket index of each potential link label. If it is a colon (`:`), and this character is followed by one or more characters, this indicates a footnote body.
             # Warning: this code is partially reused for link reference definitions
             # Assignment to hold the post-colon character count
             post_colon_character_count = 0
             # Determining if the current line contains only one potential footnote link label
-            if current_line_number in document_markup_entire["link"]["potential_footnote_link_label_lines"] and len(document_markup_entire["link"]["potential_footnote_link_label_lines"][current_line_number]["potential_footnote_link_label_indexes"]) == 1 and document_markup_entire["link"]["potential_footnote_link_label_lines"][current_line_number]["potential_footnote_link_label_indexes"][1]["left_bracket_index"] == 0:
+            if current_line_number in document_markup_entire["link"]["potential_footnote_link_label_lines"] and len(document_markup_entire["link"]["potential_footnote_link_label_lines"][current_line_number]["potential_footnote_link_label_indexes"]) == 1 and document_markup_entire["link"]["potential_footnote_link_label_lines"][current_line_number]["potential_footnote_link_label_indexes"][0]["left_bracket_index"] == 0:
                 # Determining if the right bracket index is immediately followed by a colon
-                colon_index = document_markup_entire["link"]["potential_footnote_link_label_lines"][current_line_number]["potential_footnote_link_label_indexes"][1]["right_bracket_index"] + 1
+                colon_index = document_markup_entire["link"]["potential_footnote_link_label_lines"][current_line_number]["potential_footnote_link_label_indexes"][0]["right_bracket_index"] + 1
                 if current_line_string[colon_index] == ":":
                     # Determining if the colon is followed by one or more characters
                     for current_character in current_line_string[colon_index + 1:]:
@@ -417,27 +412,19 @@ def markup_analysis(input_filename):
                         at_least_one_footnote_link_reference_definition_exists = True
                         footnote_body_start_index = colon_index + 1
                         footnote_body_end_index = len(current_line_string)
-                        # Creating multiple dictionaries to hold link-reference-definition-related information on the current line number, if none exist.
-                        # This code should only be executed once per line.
-                        if current_line_number not in document_markup_entire["link"]["footnote_link_reference_definition_lines"]:
-                            document_markup_entire["link"]["footnote_link_reference_definition_lines"][current_line_number] = {}
-                            document_markup_entire["link"]["footnote_link_reference_definition_lines"][current_line_number]["footnote_link_reference_definition_indexes"] = {}
-                        # Copying footnote link reference definition indexes from dictionary of potential-link-label positions to dictionary of footnote-link-reference-definition positions, then removing copied values from dictionary of potential-link-label positions.
-                        # Warning: this may create gaps in the numerical sequence of sub-dictionary keys in `potential_footnote_link_label_indexes`.
-                        document_markup_entire["link"]["footnote_link_reference_definition_lines"][current_line_number]["footnote_link_reference_definition_indexes"] = document_markup_entire["link"]["potential_footnote_link_label_lines"][current_line_number]["potential_footnote_link_label_indexes"].pop(1)
-                        # This code is included after using the `pop` operation to prevent the `pop` operation from overwriting it
-                        document_markup_entire["link"]["footnote_link_reference_definition_lines"][current_line_number]["footnote_link_reference_definition_indexes"]["footnote_body_start_index"] = 0
-                        document_markup_entire["link"]["footnote_link_reference_definition_lines"][current_line_number]["footnote_link_reference_definition_indexes"]["footnote_body_end_index"] = 0
-                        document_markup_entire["link"]["footnote_link_reference_definition_lines"][current_line_number]["footnote_link_reference_definition_indexes"]["footnote_body_start_index"] = footnote_body_start_index
-                        document_markup_entire["link"]["footnote_link_reference_definition_lines"][current_line_number]["footnote_link_reference_definition_indexes"]["footnote_body_end_index"] = footnote_body_end_index
-
+                        # Creating a dictionary to hold potential-footnote-link-reference-definition-related information on the current line number
+                        document_markup_entire["link"]["footnote_link_reference_definition_lines"][current_line_number] = {}
+                        document_markup_entire["link"]["footnote_link_reference_definition_lines"][current_line_number]["footnote_link_reference_definition_indexes"] = {}
+                        # Copying footnote link reference definition index from list of potential-link-label positions to dictionary of footnote-link-reference-definition positions, then removing copied value from list of potential-link-label positions.
+                        document_markup_entire["link"]["footnote_link_reference_definition_lines"][current_line_number]["footnote_link_reference_definition_indexes"] = {"left_bracket_index": 0, "right_bracket_index": document_markup_entire["link"]["potential_footnote_link_label_lines"][current_line_number]["potential_footnote_link_label_indexes"][0]["right_bracket_index"], "footnote_body_start_index": footnote_body_start_index, "footnote_body_end_index": footnote_body_end_index}
+                        del document_markup_entire["link"]["potential_footnote_link_label_lines"][current_line_number]["potential_footnote_link_label_indexes"][0]
             # Determining if any of the potential-link-label positions indicate inline links.
             # This is done by examining the character immediately following the right bracket index of each potential link label. If it is a left parenthesis (`(`), and this character is followed by zero or more characters and a right parenthesis (`)`), this indicates an inline link text followed by an inline link destination.
             # Warning: this does not follow CommonMark spec
             if current_line_number in document_markup_entire["link"]["potential_link_label_lines"]:
                 # A dictionary is copied to a list for the duration of the loop in order to allow removal of dictionary items *during* the loop
                 for inline_link_text_index in list(document_markup_entire["link"]["potential_link_label_lines"][current_line_number]["potential_link_label_indexes"]):
-                    left_parenthesis_index = document_markup_entire["link"]["potential_link_label_lines"][current_line_number]["potential_link_label_indexes"][inline_link_text_index]["right_bracket_index"] + 1
+                    left_parenthesis_index = inline_link_text_index["right_bracket_index"] + 1
                     if current_line_string[left_parenthesis_index] == "(":
                         current_right_parenthesis_character_index = left_parenthesis_index + 1
                         for current_character in current_line_string[left_parenthesis_index + 1:]:
@@ -445,27 +432,18 @@ def markup_analysis(input_filename):
                                 right_parenthesis_index = current_right_parenthesis_character_index
                                 break
                             current_right_parenthesis_character_index += 1
-                        if right_parenthesis_index > (document_markup_entire["link"]["potential_link_label_lines"][current_line_number]["potential_link_label_indexes"][inline_link_text_index]["right_bracket_index"] + 1):
+                        if right_parenthesis_index > left_parenthesis_index:
                             at_least_one_inline_link_exists = True
                             inline_link_count += 1
                         if at_least_one_inline_link_exists == True:
                             # Creating multiple dictionaries to hold inline-link-related information on the current line number, if none exist.
                             # This code should only be executed once per line.
                             if current_line_number not in document_markup_entire["link"]["inline_link_lines"]:
-                                document_markup_entire["link"]["inline_link_lines"][current_line_number] = {}
-                                document_markup_entire["link"]["inline_link_lines"][current_line_number]["inline_link_indexes"] = {}
-                            # Creating multiple dictionaries to hold inline-link-related information on the current line number, if none exist.
-                            # This code should be executed for each inline link found on the line.
-                            if inline_link_count not in document_markup_entire["link"]["inline_link_lines"][current_line_number]["inline_link_indexes"]:
-                                document_markup_entire["link"]["inline_link_lines"][current_line_number]["inline_link_indexes"][inline_link_count] = {}
-                            # Copying inline link indexes from dictionary of potential-link-label positions to dictionary of inline-link positions, then removing copied values from dictionary of potential-link-label positions.
-                            # Warning: this may create gaps in the numerical sequence of sub-dictionary keys in `potential_link_label_indexes`.
-                            document_markup_entire["link"]["inline_link_lines"][current_line_number]["inline_link_indexes"][inline_link_count] = document_markup_entire["link"]["potential_link_label_lines"][current_line_number]["potential_link_label_indexes"].pop(inline_link_text_index)
-                            # This code is included after using the `pop` operation to prevent the `pop` operation from overwriting it
-                            document_markup_entire["link"]["inline_link_lines"][current_line_number]["inline_link_indexes"][inline_link_count]["left_parenthesis_index"] = 0
-                            document_markup_entire["link"]["inline_link_lines"][current_line_number]["inline_link_indexes"][inline_link_count]["right_parenthesis_index"] = 0
-                            document_markup_entire["link"]["inline_link_lines"][current_line_number]["inline_link_indexes"][inline_link_count]["left_parenthesis_index"] = left_parenthesis_index
-                            document_markup_entire["link"]["inline_link_lines"][current_line_number]["inline_link_indexes"][inline_link_count]["right_parenthesis_index"] = right_parenthesis_index
+                                document_markup_entire["link"]["inline_link_lines"][current_line_number] = defaultdict(list)
+                                document_markup_entire["link"]["inline_link_lines"][current_line_number]["inline_link_indexes"]
+                            # Copying inline link indexes from list of potential-link-label positions to list of inline-link positions, then removing copied values from list of potential-link-label positions.
+                            document_markup_entire["link"]["inline_link_lines"][current_line_number]["inline_link_indexes"].append({"left_bracket_index": document_markup_entire["link"]["potential_link_label_lines"][current_line_number]["potential_link_label_indexes"][0]["left_bracket_index"], "right_bracket_index": document_markup_entire["link"]["potential_link_label_lines"][current_line_number]["potential_link_label_indexes"][0]["right_bracket_index"], "left_parenthesis_index": left_parenthesis_index, "right_parenthesis_index": right_parenthesis_index})
+                            document_markup_entire["link"]["potential_link_label_lines"][current_line_number]["potential_link_label_indexes"].remove(inline_link_text_index)
             # Determining if any of the potential-link-label positions indicate link reference definitions.
             # This is done by examining the character immediately following the right bracket index of each potential link label. If it is a colon (`:`), and this character is followed by zero or more optional space characters and a URI, this indicates a link label followed by a link destination.
             # Warning: this does not follow CommonMark spec, and uses CommonMark terminology differently than CommonMark itself does
@@ -479,9 +457,9 @@ def markup_analysis(input_filename):
             # Assignment to hold the URI start index
             uri_start_index = 0
             # Determining if the current line contains only one potential link label
-            if current_line_number in document_markup_entire["link"]["potential_link_label_lines"] and len(document_markup_entire["link"]["potential_link_label_lines"][current_line_number]["potential_link_label_indexes"]) == 1 and document_markup_entire["link"]["potential_link_label_lines"][current_line_number]["potential_link_label_indexes"][1]["left_bracket_index"] == 0:
+            if current_line_number in document_markup_entire["link"]["potential_link_label_lines"] and len(document_markup_entire["link"]["potential_link_label_lines"][current_line_number]["potential_link_label_indexes"]) == 1 and document_markup_entire["link"]["potential_link_label_lines"][current_line_number]["potential_link_label_indexes"][0]["left_bracket_index"] == 0:
                 # Determining if the right bracket index is immediately followed by a colon
-                colon_index = document_markup_entire["link"]["potential_link_label_lines"][current_line_number]["potential_link_label_indexes"][1]["right_bracket_index"] + 1
+                colon_index = document_markup_entire["link"]["potential_link_label_lines"][current_line_number]["potential_link_label_indexes"][0]["right_bracket_index"] + 1
                 if current_line_string[colon_index] == ":":
                     # Determining if the colon is followed by zero or more optional space characters
                     for current_character in current_line_string[colon_index + 1:]:
@@ -507,15 +485,12 @@ def markup_analysis(input_filename):
                         uri_end_index = current_uri_end_index
                         link_reference_definition_count += 1
                         at_least_one_link_reference_definition_exists = True
-                        # Creating multiple dictionaries to hold link-reference-definition-related information on the current line number, if none exist.
-                        # This code should only be executed once per line.
-                        if current_line_number not in document_markup_entire["link"]["link_reference_definition_lines"]:
-                            document_markup_entire["link"]["link_reference_definition_lines"][current_line_number] = {}
-                            document_markup_entire["link"]["link_reference_definition_lines"][current_line_number]["link_reference_definition_indexes"] = {}
+                        # Creating a dictionary to hold link-reference-definition-related information on the current line number
+                        document_markup_entire["link"]["link_reference_definition_lines"][current_line_number] = {}
+                        document_markup_entire["link"]["link_reference_definition_lines"][current_line_number]["link_reference_definition_indexes"] = {}
                         # Copying link reference definition indexes from dictionary of potential-link-label positions to dictionary of link-reference-definition positions, then removing copied values from dictionary of potential-link-label positions.
-                        # Warning: this may create gaps in the numerical sequence of sub-dictionary keys in `potential_link_label_indexes`.
-                        document_markup_entire["link"]["link_reference_definition_lines"][current_line_number]["link_reference_definition_indexes"] = document_markup_entire["link"]["potential_link_label_lines"][current_line_number]["potential_link_label_indexes"].pop(1)
-                        # This code is included after using the `pop` operation to prevent the `pop` operation from overwriting it
+                        document_markup_entire["link"]["link_reference_definition_lines"][current_line_number]["link_reference_definition_indexes"] = {"left_bracket_index": 0, "right_bracket_index": document_markup_entire["link"]["potential_link_label_lines"][current_line_number]["potential_link_label_indexes"][0]["right_bracket_index"]}
+                        del document_markup_entire["link"]["potential_link_label_lines"][current_line_number]["potential_link_label_indexes"][0]
                         if inter_colon_uri_space_character_count != 0:
                             document_markup_entire["link"]["link_reference_definition_lines"][current_line_number]["link_reference_definition_indexes"]["inter_colon_uri_space_character_count"] = 0
                             document_markup_entire["link"]["link_reference_definition_lines"][current_line_number]["link_reference_definition_indexes"]["inter_colon_uri_space_character_count"] = inter_colon_uri_space_character_count
