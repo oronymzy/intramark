@@ -392,8 +392,9 @@ def markup_analysis(input_filename):
                         if current_line_number not in document_markup_entire["link"]["potential_footnote_link_label_lines"]:
                             document_markup_entire["link"]["potential_footnote_link_label_lines"][current_line_number] = defaultdict(list)
                             document_markup_entire["link"]["potential_footnote_link_label_lines"][current_line_number]["potential_footnote_link_label_indexes"]
-                        # Copying potential footnote link label indexes from list of potential-link-label positions to list of potential-footnote-link-label positions, then removing copied values from list of potential-link-label positions.
+                        # Copying potential footnote link label indexes from list of potential-link-label positions to list of potential-footnote-link-label positions
                         document_markup_entire["link"]["potential_footnote_link_label_lines"][current_line_number]["potential_footnote_link_label_indexes"].append(potential_footnote_link_label_index)
+                        # Removing copied values from list of potential-link-label positions
                         document_markup_entire["link"]["potential_link_label_lines"][current_line_number]["potential_link_label_indexes"].remove(potential_footnote_link_label_index)
             # Determining if any of the potential-footnote-link-label positions indicate footnote link reference definitions.
             # This is done by examining the character immediately following the right bracket index of each potential link label. If it is a colon (`:`), and this character is followed by one or more characters, this indicates a footnote body.
@@ -415,9 +416,10 @@ def markup_analysis(input_filename):
                         # Creating a dictionary to hold potential-footnote-link-reference-definition-related information on the current line number
                         document_markup_entire["link"]["footnote_link_reference_definition_lines"][current_line_number] = {}
                         document_markup_entire["link"]["footnote_link_reference_definition_lines"][current_line_number]["footnote_link_reference_definition_indexes"] = {}
-                        # Copying footnote link reference definition index from list of potential-link-label positions to dictionary of footnote-link-reference-definition positions, then removing copied value from list of potential-link-label positions.
+                        # Copying footnote link reference definition index from list of potential-link-label positions to dictionary of footnote-link-reference-definition positions
                         document_markup_entire["link"]["footnote_link_reference_definition_lines"][current_line_number]["footnote_link_reference_definition_indexes"] = {"left_bracket_index": 0, "right_bracket_index": document_markup_entire["link"]["potential_footnote_link_label_lines"][current_line_number]["potential_footnote_link_label_indexes"][0]["right_bracket_index"], "footnote_body_start_index": footnote_body_start_index, "footnote_body_end_index": footnote_body_end_index}
-                        del document_markup_entire["link"]["potential_footnote_link_label_lines"][current_line_number]["potential_footnote_link_label_indexes"][0]
+                        # Removing now-empty sub-dictionary from dictionary of potential footnote link label lines
+                        del document_markup_entire["link"]["potential_footnote_link_label_lines"][current_line_number]
             # Determining if any of the potential-link-label positions indicate inline links.
             # This is done by examining the character immediately following the right bracket index of each potential link label. If it is a left parenthesis (`(`), and this character is followed by zero or more characters and a right parenthesis (`)`), this indicates an inline link text followed by an inline link destination.
             # Warning: this does not follow CommonMark spec
@@ -488,9 +490,10 @@ def markup_analysis(input_filename):
                         # Creating a dictionary to hold link-reference-definition-related information on the current line number
                         document_markup_entire["link"]["link_reference_definition_lines"][current_line_number] = {}
                         document_markup_entire["link"]["link_reference_definition_lines"][current_line_number]["link_reference_definition_indexes"] = {}
-                        # Copying link reference definition indexes from dictionary of potential-link-label positions to dictionary of link-reference-definition positions, then removing copied values from dictionary of potential-link-label positions.
+                        # Copying link reference definition indexes from dictionary of potential-link-label positions to dictionary of link-reference-definition positions
                         document_markup_entire["link"]["link_reference_definition_lines"][current_line_number]["link_reference_definition_indexes"] = {"left_bracket_index": 0, "right_bracket_index": document_markup_entire["link"]["potential_link_label_lines"][current_line_number]["potential_link_label_indexes"][0]["right_bracket_index"]}
-                        del document_markup_entire["link"]["potential_link_label_lines"][current_line_number]["potential_link_label_indexes"][0]
+                        # Removing now-empty sub-dictionary from dictionary of potential link label lines
+                        del document_markup_entire["link"]["potential_link_label_lines"][current_line_number]
                         if inter_colon_uri_space_character_count != 0:
                             document_markup_entire["link"]["link_reference_definition_lines"][current_line_number]["link_reference_definition_indexes"]["inter_colon_uri_space_character_count"] = 0
                             document_markup_entire["link"]["link_reference_definition_lines"][current_line_number]["link_reference_definition_indexes"]["inter_colon_uri_space_character_count"] = inter_colon_uri_space_character_count
