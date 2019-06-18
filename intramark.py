@@ -53,6 +53,8 @@ def initial_input():
     modification_group.add_argument("+H", dest="plus_H", help="increase overall heading level by a numerical amount from 1-5, or *max* for maximum allowable amount", default=None)
     modification_group.add_argument("-H", dest="minus_H", help="decrease overall heading level by a numerical amount from 1-5, or *max* for maximum allowable amount", default=None)
     modification_group.add_argument("=H", dest="equals_H", help="equalize heading trailing number sign count with heading level", action="store_true")
+    modification_group.add_argument("-k", "--link", help="modify links, using *i* make all links inline-style", default=None)
+    
     modification_group.add_argument("-s", "--strip", help="strip away markup text, *b* to strip line breaks, *H* to strip all heading markup text, or *H-end* to strip only trailing number signs and spaces from headings", default=None)
     mutually_exclusive_modification_group = modification_group.add_mutually_exclusive_group()
     mutually_exclusive_modification_group.add_argument("--heading-decrease-max", help="decrease overall heading level by maximum allowable amount", action="store_true")
@@ -171,6 +173,21 @@ def initial_input():
     
     # Code related to `strip` argument ends
 
+    # Code related to `link` argument begins
+    
+    initial_input["make_all_links_inline_style"] = False
+    
+    if args.link != None:
+        if "i" in args.link:
+            initial_input["make_all_links_inline_style"] = True
+        else:
+            # In this situation, an invalid value has been provided
+            print("\nInvalid input:".upper(),"the only acceptable value for *-k/--link* is *i*.\n")
+            parser.print_help()
+            exit()
+    
+    # Code related to `link` argument ends
+
     # Determining if any modifications should be made to the contents of the input file
     if (initial_input["decrease_overall_heading_level_maximally"] == True or
             initial_input["increase_overall_heading_level_maximally"] == True or
@@ -179,7 +196,8 @@ def initial_input():
             initial_input["strip_trailing_number_signs_from_headings"] == True or
             initial_input["equalize_heading_trailing_number_sign_count_with_heading_level"] == True or
             initial_input["strip_all_heading_markup"] == True or
-            initial_input["annotate_headings"] == True):
+            initial_input["annotate_headings"] == True or
+            initial_input["make_all_links_inline_style"] == True):
         initial_input["modification_to_be_made_to_heading"] = True
     if initial_input["strip_all_line_breaks"] == True:
         initial_input["modification_to_be_made_to_line_break"] = True
@@ -554,15 +572,31 @@ def markup_analysis(input_filename):
                 del document_markup_entire["link"]["potential_link_label_lines"][potential_link_label_line]
         # Resetting file object position to beginning of file
         opened_file.seek(0)
-        
-        # for current_line_string in opened_file:
+        # Resetting assignment to hold the current line number
+        current_line_number = 0
 
-        ## Determining if any potential link labels match the link labels in link reference definitions
-        #if bool(document_markup_entire["link"]["potential_link_label_lines"]) == True:
-            #for line_number in document_markup_entire["link"]["potential_link_label_lines"]:
-                #print("foobar")
+        # If at least one potential link label exists and at least one link reference definition exists, extracting any existing link labels and URIs, potentially for later use in comparing potential link labels with links labels found within link reference definitions
+        # Warning: this does not follow CommonMark spec, and uses CommonMark terminology differently than CommonMark itself does
+        # Determining if any potential link labels exist and if any link reference definitions exist
+        if bool(document_markup_entire["link"]["potential_link_label_lines"]) == True and bool(document_markup_entire["link"]["link_reference_definition_lines"]) == True:
+            for current_line_string in opened_file:
+                # Stripping newlines
+                current_line_string = current_line_string.rstrip('\n')
+                # Incrementing to keep track of the current line number
+                current_line_number += 1
+                # Determining if the current line has any potential link labels
+                if current_line_number in document_markup_entire["link"]["potential_link_label_lines"]:
+                    # Extracting normalized potential link label
+                    # A dictionary is copied to a list for the duration of the loop in order to allow removal of dictionary items *during* the loop
+                    for potential_link_label_indexes in list(document_markup_entire["link"]["potential_link_label_lines"][current_line_number]["potential_link_label_indexes"]):
+                        potential_link_label_indexes["normalized_potential_link_label"] = current_line_string[potential_link_label_indexes["left_bracket_index"] + 1:potential_link_label_indexes["right_bracket_index"]]
+                # Determining if the current line has any link reference definitions
+                elif current_line_number in document_markup_entire["link"]["link_reference_definition_lines"]:
+                    # Extracting normalized link label
+                    document_markup_entire["link"]["link_reference_definition_lines"][current_line_number]["link_reference_definition_indexes"]["normalized_link_label"] = current_line_string[document_markup_entire["link"]["link_reference_definition_lines"][current_line_number]["link_reference_definition_indexes"]["left_bracket_index"] + 1:document_markup_entire["link"]["link_reference_definition_lines"][current_line_number]["link_reference_definition_indexes"]["right_bracket_index"]]
+                    # Extracting URI
+                    document_markup_entire["link"]["link_reference_definition_lines"][current_line_number]["link_reference_definition_indexes"]["uri"] = current_line_string[document_markup_entire["link"]["link_reference_definition_lines"][current_line_number]["link_reference_definition_indexes"]["uri_start_index"]:document_markup_entire["link"]["link_reference_definition_lines"][current_line_number]["link_reference_definition_indexes"]["uri_end_index"] + 1]
 
-    
     # Appending information on whether or not at least one hard line break exists to a dictionary
     document_markup_entire["break"]["at_least_one_hard_line_break_exists"] = at_least_one_hard_line_break_exists
     # Appending information on whether or not at least one heading exists to a dictionary
