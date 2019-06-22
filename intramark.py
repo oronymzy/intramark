@@ -83,6 +83,7 @@ def initial_input():
     initial_input["modification_to_be_made"] = False
     initial_input["modification_to_be_made_to_heading"] = False
     initial_input["modification_to_be_made_to_line_break"] = False
+    initial_input["modification_to_be_made_to_link"] = False
     initial_input["display_file_contents"] = True
     initial_input["annotate_headings"] = False
 
@@ -210,13 +211,15 @@ def initial_input():
             initial_input["strip_trailing_number_signs_from_headings"] == True or
             initial_input["equalize_heading_trailing_number_sign_count_with_heading_level"] == True or
             initial_input["strip_all_heading_markup"] == True or
-            initial_input["annotate_headings"] == True or
-            initial_input["make_all_links_inline_style"] == True):
+            initial_input["annotate_headings"] == True):
         initial_input["modification_to_be_made_to_heading"] = True
     if initial_input["strip_all_line_breaks"] == True:
         initial_input["modification_to_be_made_to_line_break"] = True
+    if initial_input["make_all_links_inline_style"] == True:
+        initial_input["modification_to_be_made_to_link"] = True
     if (initial_input["modification_to_be_made_to_heading"] == True or
-        initial_input["modification_to_be_made_to_line_break"] == True):
+        initial_input["modification_to_be_made_to_line_break"] == True or
+        initial_input["modification_to_be_made_to_link"] == True):
         initial_input["modification_to_be_made"] = True
 
     # Input validation: at least one modification option is required in most cases.
@@ -617,10 +620,11 @@ def markup_analysis(input_filename):
     document_markup_entire["heading"]["at_least_one_heading_exists"] = at_least_one_heading_exists
     # Appending information on whether or not at least one footnote link reference definition exists to a dictionary
     document_markup_entire["link"]["footnote_link_reference_definition_lines"]["at_least_one_footnote_link_reference_definition_exists"] = at_least_one_footnote_link_reference_definition_exists
-    # Appending information on whether or not at least one inline link exists to a dictionary
-    document_markup_entire["link"]["inline_link_lines"]["at_least_one_inline_link_exists"] = at_least_one_inline_link_exists
-    # Appending information on whether or not at least one link reference definition exists to a dictionary
-    document_markup_entire["link"]["link_reference_definition_lines"]["at_least_one_link_reference_definition_exists"] = at_least_one_link_reference_definition_exists
+    # Appending information on whether or not at least one link exists to a dictionary
+    if at_least_one_inline_link_exists == True or at_least_one_link_reference_definition_exists == True:
+        document_markup_entire["link"]["at_least_one_link_exists"] = True
+    else:
+        document_markup_entire["link"]["at_least_one_link_exists"] = False
     
     # Appending additional information only if at least one heading exists
     if at_least_one_heading_exists == True:
@@ -670,6 +674,34 @@ def markup_modification(temporary_file, information_from_command_line_input, doc
             elif information_from_command_line_input["increase_overall_heading_level_numerically"] == True:
                 number_of_heading_levels_to_increase_in_either_case = information_from_command_line_input["number_of_heading_levels_to_increase_numerically"]
                 increase_overall_heading_level_in_either_case = True
+        # Checking if any links should be modified
+        if information_from_command_line_input["modification_to_be_made_to_link"] == True:
+            # Warning: this code is a potential bottleneck
+            # Determining if any reference-style links exist by determining if any normalized potential link labels match normalized link reference definition link labels
+            # A dictionary is copied to a list for the duration of the loop in order to allow removal of dictionary items *during* the loop
+            for potential_link_label_line in list(document_markup_entire["link"]["potential_link_label_lines"]):
+                for potential_link_label_indexes in list(document_markup_entire["link"]["potential_link_label_lines"][potential_link_label_line]["potential_link_label_indexes"]):
+                    for link_reference_definition_line in list(document_markup_entire["link"]["link_reference_definition_lines"]):
+                        if potential_link_label_indexes["normalized_potential_link_label"] == document_markup_entire["link"]["link_reference_definition_lines"][link_reference_definition_line]["link_reference_definition_indexes"]["normalized_link_label"]:
+                            # In this situation, a normalized potential link label matches a normalized link reference definition link label
+                            # Creating a 'reference-style link' list to hold combined information on each link label and link reference definition, if it does not exist
+                            # This code should only be executed once per program execution
+                            if "reference_style_links" not in document_markup_entire["link"]:
+                                document_markup_entire["link"]["reference_style_links"] = list()
+                            # Creating a list item to hold copied-to information on an individual link label and link reference definition, if it does not exist
+                            # This code should be executed once per match
+                            if potential_link_label_indexes["normalized_potential_link_label"] not in document_markup_entire["link"]["reference_style_links"]:
+                                document_markup_entire["link"]["reference_style_links"].append({"normalized_link_label": potential_link_label_indexes["normalized_potential_link_label"],
+                                                                                                "link_label_line": potential_link_label_line,
+                                                                                                "link_label_left_bracket_index": potential_link_label_indexes["left_bracket_index"],
+                                                                                                "link_label_right_bracket_index": potential_link_label_indexes["right_bracket_index"],
+                                                                                                "link_reference_definition_line": link_reference_definition_line,
+                                                                                                "link_reference_definition_inter_colon_link_destination_space_character_count": document_markup_entire["link"]["link_reference_definition_lines"][link_reference_definition_line]["link_reference_definition_indexes"]["inter_colon_uri_space_character_count"],
+                                                                                                "link_destination": document_markup_entire["link"]["link_reference_definition_lines"][link_reference_definition_line]["link_reference_definition_indexes"]["uri"]})
+                            # Removing copied-from information
+                            document_markup_entire["link"]["potential_link_label_lines"][potential_link_label_line]["potential_link_label_indexes"].remove(potential_link_label_indexes)
+                            del document_markup_entire["link"]["link_reference_definition_lines"][link_reference_definition_line]
+                            break
         for current_line_string in opened_file:
             # Stripping newlines
             current_line_string = current_line_string.rstrip('\n')
@@ -744,7 +776,9 @@ modifications_have_markup_to_modify = False
 if ((information_from_command_line_input["modification_to_be_made_to_heading"] == True and
         document_markup_entire["heading"]["at_least_one_heading_exists"] == True) or
         (information_from_command_line_input["modification_to_be_made_to_line_break"] == True and
-        document_markup_entire["break"]["at_least_one_hard_line_break_exists"] == True)):
+        document_markup_entire["break"]["at_least_one_hard_line_break_exists"] == True) or
+        (information_from_command_line_input["modification_to_be_made_to_link"] == True and
+        document_markup_entire["link"]["at_least_one_link_exists"] == True)):
     modifications_have_markup_to_modify = True
 
 if modifications_have_markup_to_modify == True:
