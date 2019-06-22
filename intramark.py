@@ -676,32 +676,35 @@ def markup_modification(temporary_file, information_from_command_line_input, doc
                 increase_overall_heading_level_in_either_case = True
         # Checking if any links should be modified
         if information_from_command_line_input["modification_to_be_made_to_link"] == True:
-            # Warning: this code is a potential bottleneck
-            # Determining if any reference-style links exist by determining if any normalized potential link labels match normalized link reference definition link labels
+            # Warning: potential bottleneck code begins
+            # Determining if any reference-style links exist
+            # Determining if any shortcut reference links exist by checking if any normalized potential link labels match normalized link reference definition link labels
             # A dictionary is copied to a list for the duration of the loop in order to allow removal of dictionary items *during* the loop
             for potential_link_label_line in list(document_markup_entire["link"]["potential_link_label_lines"]):
                 for potential_link_label_indexes in list(document_markup_entire["link"]["potential_link_label_lines"][potential_link_label_line]["potential_link_label_indexes"]):
                     for link_reference_definition_line in list(document_markup_entire["link"]["link_reference_definition_lines"]):
                         if potential_link_label_indexes["normalized_potential_link_label"] == document_markup_entire["link"]["link_reference_definition_lines"][link_reference_definition_line]["link_reference_definition_indexes"]["normalized_link_label"]:
                             # In this situation, a normalized potential link label matches a normalized link reference definition link label
-                            # Creating a 'reference-style link' list to hold combined information on each link label and link reference definition, if it does not exist
+                            # Creating a 'shortcut reference links' list within a 'reference-style link' dictionary to hold combined information on each link label and link reference definition, if it does not exist
                             # This code should only be executed once per program execution
                             if "reference_style_links" not in document_markup_entire["link"]:
-                                document_markup_entire["link"]["reference_style_links"] = list()
+                                document_markup_entire["link"]["reference_style_links"] = defaultdict(list)
+                                document_markup_entire["link"]["reference_style_links"]["shortcut_reference_links"]
                             # Creating a list item to hold copied-to information on an individual link label and link reference definition, if it does not exist
                             # This code should be executed once per match
-                            if potential_link_label_indexes["normalized_potential_link_label"] not in document_markup_entire["link"]["reference_style_links"]:
-                                document_markup_entire["link"]["reference_style_links"].append({"normalized_link_label": potential_link_label_indexes["normalized_potential_link_label"],
+                            if potential_link_label_indexes["normalized_potential_link_label"] not in document_markup_entire["link"]["reference_style_links"]["shortcut_reference_links"]:
+                                document_markup_entire["link"]["reference_style_links"]["shortcut_reference_links"].append({"normalized_link_label": potential_link_label_indexes["normalized_potential_link_label"],
                                                                                                 "link_label_line": potential_link_label_line,
                                                                                                 "link_label_left_bracket_index": potential_link_label_indexes["left_bracket_index"],
                                                                                                 "link_label_right_bracket_index": potential_link_label_indexes["right_bracket_index"],
                                                                                                 "link_reference_definition_line": link_reference_definition_line,
-                                                                                                "link_reference_definition_inter_colon_link_destination_space_character_count": document_markup_entire["link"]["link_reference_definition_lines"][link_reference_definition_line]["link_reference_definition_indexes"]["inter_colon_uri_space_character_count"],
-                                                                                                "link_destination": document_markup_entire["link"]["link_reference_definition_lines"][link_reference_definition_line]["link_reference_definition_indexes"]["uri"]})
+                                                                                                "link_reference_definition_inter_colon_uri_space_character_count": document_markup_entire["link"]["link_reference_definition_lines"][link_reference_definition_line]["link_reference_definition_indexes"]["inter_colon_uri_space_character_count"],
+                                                                                                "link_uri": document_markup_entire["link"]["link_reference_definition_lines"][link_reference_definition_line]["link_reference_definition_indexes"]["uri"]})
                             # Removing copied-from information
                             document_markup_entire["link"]["potential_link_label_lines"][potential_link_label_line]["potential_link_label_indexes"].remove(potential_link_label_indexes)
                             del document_markup_entire["link"]["link_reference_definition_lines"][link_reference_definition_line]
                             break
+            # Warning: potential bottleneck code ends
         for current_line_string in opened_file:
             # Stripping newlines
             current_line_string = current_line_string.rstrip('\n')
