@@ -729,7 +729,7 @@ def markup_modification(temporary_file, information_from_command_line_input, doc
                                 # Creating a list item to hold copied-to information on an individual link label and link reference definition, if it does not exist
                                 # This code should be executed once per match
                                 if shortcut_reference_link["normalized_link_label"] not in document_markup_entire["link"]["reference_style_links"]["collapsed_reference_links"]:
-                                    document_markup_entire["link"]["reference_style_links"]["collapsed_reference_links"] = shortcut_reference_link
+                                    document_markup_entire["link"]["reference_style_links"]["collapsed_reference_links"].append(shortcut_reference_link)
                                     # Removing copied-from information
                                     document_markup_entire["link"]["reference_style_links"]["shortcut_reference_links"].remove(shortcut_reference_link)
                         required_string_position = current_line_string.find("[]", required_string_position + 1)
@@ -769,6 +769,41 @@ def markup_modification(temporary_file, information_from_command_line_input, doc
             current_line_string = current_line_string.rstrip('\n')
             # Incrementing to keep track of the current line number
             current_line_number += 1
+            
+            # Warning: incomplete code begins
+            # Checking if the current line contains a link to be modified
+            if information_from_command_line_input["modification_to_be_made_to_link"] == True:
+                if information_from_command_line_input["make_all_links_inline_style"] == True and "reference_style_links" in document_markup_entire["link"]:
+                    # Assignments to hold default values for maximizing output consistency
+                    line_contains_collapsed_reference_link = 0
+                    line_contains_full_reference_link = 0
+                    line_contains_shortcut_reference_link = 0
+                    collapsed_reference_link_list_index = 0
+                    full_reference_link_list_index = 0
+                    shortcut_reference_link_list_index = 0
+                    # Determining if a line contains more than one variety of reference-style link, as this will affect the way the line is modified
+                    for collapsed_reference_link in document_markup_entire["link"]["reference_style_links"]["collapsed_reference_links"]:
+                        if collapsed_reference_link["link_label_line"] == current_line_number:
+                            line_contains_collapsed_reference_link = 1
+                            break
+                        collapsed_reference_link_list_index += 1
+                    for full_reference_link in document_markup_entire["link"]["reference_style_links"]["full_reference_links"]:
+                        if full_reference_link["link_label_line"] == current_line_number:
+                            line_contains_full_reference_link = 1
+                            break
+                        full_reference_link_list_index += 1
+                    for shortcut_reference_link in document_markup_entire["link"]["reference_style_links"]["shortcut_reference_links"]:
+                        if shortcut_reference_link["link_label_line"] == current_line_number:
+                            line_contains_shortcut_reference_link = 1
+                            break
+                        shortcut_reference_link_list_index += 1
+                    if line_contains_collapsed_reference_link + line_contains_full_reference_link + line_contains_shortcut_reference_link == 1:
+                        # In this situation, the line contains one variety of reference-style link
+                        if line_contains_collapsed_reference_link == 1:
+                            # Inserting URI in place of `[]`
+                            current_line_string = current_line_string[:document_markup_entire["link"]["reference_style_links"]["collapsed_reference_links"][collapsed_reference_link_list_index]["link_label_right_bracket_index"] + 1] + "(" + document_markup_entire["link"]["reference_style_links"]["collapsed_reference_links"][collapsed_reference_link_list_index]["link_uri"] + ")" + current_line_string[document_markup_entire["link"]["reference_style_links"]["collapsed_reference_links"][collapsed_reference_link_list_index]["link_label_right_bracket_index"] + 3:]
+            # Warning: incomplete code ends
+                        
             # Checking if the current line contains a heading to be modified
             if (current_line_number in document_markup_entire["heading"]["line_numbers_containing_headings"] and
                     information_from_command_line_input["modification_to_be_made_to_heading"] == True):
