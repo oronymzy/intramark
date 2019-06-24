@@ -680,31 +680,90 @@ def markup_modification(temporary_file, information_from_command_line_input, doc
             # Determining if any reference-style links exist
             # Determining if any shortcut reference links exist by checking if any normalized potential link labels match normalized link reference definition link labels
             # A dictionary is copied to a list for the duration of the loop in order to allow removal of dictionary items *during* the loop
-            for potential_link_label_line in list(document_markup_entire["link"]["potential_link_label_lines"]):
-                for potential_link_label_indexes in list(document_markup_entire["link"]["potential_link_label_lines"][potential_link_label_line]["potential_link_label_indexes"]):
-                    for link_reference_definition_line in list(document_markup_entire["link"]["link_reference_definition_lines"]):
-                        if potential_link_label_indexes["normalized_potential_link_label"] == document_markup_entire["link"]["link_reference_definition_lines"][link_reference_definition_line]["link_reference_definition_indexes"]["normalized_link_label"]:
-                            # In this situation, a normalized potential link label matches a normalized link reference definition link label
-                            # Creating a 'shortcut reference links' list within a 'reference-style link' dictionary to hold combined information on each link label and link reference definition, if it does not exist
-                            # This code should only be executed once per program execution
-                            if "reference_style_links" not in document_markup_entire["link"]:
-                                document_markup_entire["link"]["reference_style_links"] = defaultdict(list)
-                                document_markup_entire["link"]["reference_style_links"]["shortcut_reference_links"]
-                            # Creating a list item to hold copied-to information on an individual link label and link reference definition, if it does not exist
-                            # This code should be executed once per match
-                            if potential_link_label_indexes["normalized_potential_link_label"] not in document_markup_entire["link"]["reference_style_links"]["shortcut_reference_links"]:
-                                document_markup_entire["link"]["reference_style_links"]["shortcut_reference_links"].append({"normalized_link_label": potential_link_label_indexes["normalized_potential_link_label"],
-                                                                                                "link_label_line": potential_link_label_line,
-                                                                                                "link_label_left_bracket_index": potential_link_label_indexes["left_bracket_index"],
-                                                                                                "link_label_right_bracket_index": potential_link_label_indexes["right_bracket_index"],
-                                                                                                "link_reference_definition_line": link_reference_definition_line,
-                                                                                                "link_reference_definition_inter_colon_uri_space_character_count": document_markup_entire["link"]["link_reference_definition_lines"][link_reference_definition_line]["link_reference_definition_indexes"]["inter_colon_uri_space_character_count"],
-                                                                                                "link_uri": document_markup_entire["link"]["link_reference_definition_lines"][link_reference_definition_line]["link_reference_definition_indexes"]["uri"]})
-                            # Removing copied-from information
-                            document_markup_entire["link"]["potential_link_label_lines"][potential_link_label_line]["potential_link_label_indexes"].remove(potential_link_label_indexes)
-                            del document_markup_entire["link"]["link_reference_definition_lines"][link_reference_definition_line]
-                            break
+            if "potential_link_label_lines" in document_markup_entire["link"]:
+                for potential_link_label_line in list(document_markup_entire["link"]["potential_link_label_lines"]):
+                    for potential_link_label_indexes in list(document_markup_entire["link"]["potential_link_label_lines"][potential_link_label_line]["potential_link_label_indexes"]):
+                        for link_reference_definition_line in list(document_markup_entire["link"]["link_reference_definition_lines"]):
+                            if potential_link_label_indexes["normalized_potential_link_label"] == document_markup_entire["link"]["link_reference_definition_lines"][link_reference_definition_line]["link_reference_definition_indexes"]["normalized_link_label"]:
+                                # In this situation, a normalized potential link label matches a normalized link reference definition link label
+                                # Creating a 'shortcut reference links' list within a 'reference-style link' dictionary to hold combined information on each link label and link reference definition, if it does not exist
+                                # This code should only be executed once per program execution
+                                if "reference_style_links" not in document_markup_entire["link"]:
+                                    document_markup_entire["link"]["reference_style_links"] = defaultdict(list)
+                                    document_markup_entire["link"]["reference_style_links"]["shortcut_reference_links"]
+                                # Creating a list item to hold copied-to information on an individual link label and link reference definition, if it does not exist
+                                # This code should be executed once per match
+                                if potential_link_label_indexes["normalized_potential_link_label"] not in document_markup_entire["link"]["reference_style_links"]["shortcut_reference_links"]:
+                                    document_markup_entire["link"]["reference_style_links"]["shortcut_reference_links"].append({"normalized_link_label": potential_link_label_indexes["normalized_potential_link_label"],
+                                                                                                    "link_label_line": potential_link_label_line,
+                                                                                                    "link_label_left_bracket_index": potential_link_label_indexes["left_bracket_index"],
+                                                                                                    "link_label_right_bracket_index": potential_link_label_indexes["right_bracket_index"],
+                                                                                                    "link_reference_definition_line": link_reference_definition_line,
+                                                                                                    "link_reference_definition_inter_colon_uri_space_character_count": document_markup_entire["link"]["link_reference_definition_lines"][link_reference_definition_line]["link_reference_definition_indexes"]["inter_colon_uri_space_character_count"],
+                                                                                                    "link_uri": document_markup_entire["link"]["link_reference_definition_lines"][link_reference_definition_line]["link_reference_definition_indexes"]["uri"]})
+                                # Removing copied-from information
+                                document_markup_entire["link"]["potential_link_label_lines"][potential_link_label_line]["potential_link_label_indexes"].remove(potential_link_label_indexes)
+                                del document_markup_entire["link"]["link_reference_definition_lines"][link_reference_definition_line]
+                                break
             # Warning: potential bottleneck code ends
+
+            # Determining if any shortcut reference links are actually collapsed reference links, if any shortcut reference links exist
+            for current_line_string in opened_file:
+                # Stripping newlines
+                current_line_string = current_line_string.rstrip('\n')
+                # Incrementing to keep track of the current line number
+                current_line_number += 1
+                # Determining if any lines contain the string `[]` that is required for a collapsed reference link, and if any shortcut reference links exist
+                if "[]" in current_line_string and "shortcut_reference_links" in document_markup_entire["link"]["reference_style_links"]:
+                    # Iterating through all found occurrences of `[]` on the line
+                    required_string_position = current_line_string.find("[]")
+                    while required_string_position >= 0:
+                        for shortcut_reference_link in document_markup_entire["link"]["reference_style_links"]["shortcut_reference_links"]:
+                            # Determining if the right bracket of the link label in a shortcut reference link is followed by `[]`
+                            if shortcut_reference_link["link_label_right_bracket_index"] + 1 == required_string_position:
+                                # In this situation, a collapsed reference link has been found
+                                # Creating a 'collapsed reference links' list within a 'reference-style link' dictionary to hold combined information on each link label and link reference definition, if it does not exist
+                                # This code should only be executed once per program execution
+                                if "collapsed_reference_links" not in document_markup_entire["link"]["reference_style_links"]:
+                                    document_markup_entire["link"]["reference_style_links"]["collapsed_reference_links"] = list()
+                                # Creating a list item to hold copied-to information on an individual link label and link reference definition, if it does not exist
+                                # This code should be executed once per match
+                                if shortcut_reference_link["normalized_link_label"] not in document_markup_entire["link"]["reference_style_links"]["collapsed_reference_links"]:
+                                    document_markup_entire["link"]["reference_style_links"]["collapsed_reference_links"] = shortcut_reference_link
+                                    # Removing copied-from information
+                                    document_markup_entire["link"]["reference_style_links"]["shortcut_reference_links"].remove(shortcut_reference_link)
+                        required_string_position = current_line_string.find("[]", required_string_position + 1)
+            # Resetting file object position to beginning of file
+            opened_file.seek(0)
+            # Resetting assignment to hold the current line number
+            current_line_number = 0
+            
+            # Warning: potential bottleneck code begins
+            # Determining if any shortcut reference links are actually full reference links, if any shortcut reference links exist
+            # A dictionary is copied to a list for the duration of the loop in order to allow removal of dictionary items *during* the loop
+            if "potential_link_label_lines" in document_markup_entire["link"] and "shortcut_reference_links" in document_markup_entire["link"]["reference_style_links"]:
+                for potential_link_label_line in list(document_markup_entire["link"]["potential_link_label_lines"]):
+                    for potential_link_label_indexes in list(document_markup_entire["link"]["potential_link_label_lines"][potential_link_label_line]["potential_link_label_indexes"]):
+                        for shortcut_reference_link in document_markup_entire["link"]["reference_style_links"]["shortcut_reference_links"]:
+                            # Determining if the right bracket of the potential link label is followed by the left bracket of the link label of the shortcut reference link
+                            if potential_link_label_indexes["right_bracket_index"] + 1 == shortcut_reference_link["link_label_left_bracket_index"]:
+                                # In this situation, a full reference link has been found
+                                # Creating a 'full reference links' list within a 'reference-style link' dictionary to hold combined information on each link text, link label, and link reference definition, if it does not exist
+                                # This code should only be executed once per program execution
+                                if "full_reference_links" not in document_markup_entire["link"]["reference_style_links"]:
+                                    document_markup_entire["link"]["reference_style_links"]["full_reference_links"] = list()
+                                # Creating a list item to hold copied-to information on an individual link text, link label, and link reference definition, if it does not exist
+                                # This code should be executed once per match
+                                if shortcut_reference_link["normalized_link_label"] not in document_markup_entire["link"]["reference_style_links"]["full_reference_links"]:
+                                    shortcut_reference_link["link_text"] = potential_link_label_indexes["normalized_potential_link_label"]
+                                    shortcut_reference_link["link_text_left_bracket_index"] = potential_link_label_indexes["left_bracket_index"]
+                                    shortcut_reference_link["link_text_right_bracket_index"] = potential_link_label_indexes["right_bracket_index"]
+                                    document_markup_entire["link"]["reference_style_links"]["full_reference_links"].append(shortcut_reference_link)
+                                    # Removing copied-from information
+                                    document_markup_entire["link"]["reference_style_links"]["shortcut_reference_links"].remove(shortcut_reference_link)
+                                    document_markup_entire["link"]["potential_link_label_lines"][potential_link_label_line]["potential_link_label_indexes"].remove(potential_link_label_indexes)
+            # Warning: potential bottleneck code ends
+
         for current_line_string in opened_file:
             # Stripping newlines
             current_line_string = current_line_string.rstrip('\n')
