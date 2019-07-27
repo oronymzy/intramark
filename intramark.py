@@ -77,7 +77,7 @@ def initial_input():
     modification_group.add_argument("=H", dest="equals_H", help="Equalize heading trailing number sign count with heading level.", action="store_true")
     modification_group.add_argument("-k", "--link", help=textwrap.dedent("""\
                                                     Modify links.
-                                                    - Use *i* to make all links inline-style."""), default=None)
+                                                    - Use *i* to make all links inline-style. Link reference definitions are removed by default, but this behavior can be suppressed by adding *p* to preserve them."""), default=None)
     modification_group.add_argument("-s", "--strip", help=textwrap.dedent("""\
                                                      Strip away markup text.
                                                      - Use *b* to strip line breaks.
@@ -204,13 +204,16 @@ def initial_input():
     # Code related to `link` argument begins
     
     initial_input["make_all_links_inline_style"] = False
+    initial_input["preserve_reference_style_links"] = False
     
     if args.link != None:
         if "i" in args.link:
             initial_input["make_all_links_inline_style"] = True
+            if "p" in args.link:
+                initial_input["preserve_reference_style_links"] = True
         else:
             # In this situation, an invalid value has been provided
-            print("\nInvalid input:".upper(),"the only acceptable value for *-k/--link* is *i*.\n")
+            print("\nInvalid input:".upper(),"the only acceptable values for *-k/--link* are *i* or *ip*.\n")
             parser.print_help()
             exit()
     
@@ -777,6 +780,7 @@ def markup_modification(temporary_file, information_from_command_line_input, doc
             # Incrementing to keep track of the current line number
             current_line_number += 1
             # Assignments to hold default values for maximizing output consistency
+            remove_current_line = False
             dictionary_item_count = 0
             intermediate_adjustment_overall = 0
             document_markup_entire["link"]["temporary_dictionary"] = dict()
@@ -816,7 +820,10 @@ def markup_modification(temporary_file, information_from_command_line_input, doc
                                                     + current_line_string[current_link_label_position[2] + 3 + intermediate_adjustment_overall:])
                                 intermediate_adjustment_overall += len(document_markup_entire["link"]["temporary_dictionary"][link_label_position_key]["link_uri"])
                         del document_markup_entire["link"]["temporary_dictionary"][link_label_position_key]
-                        
+                    # Determining if the current line has any link reference definitions that should be removed
+                    if information_from_command_line_input["preserve_reference_style_links"] == False and current_line_number in document_markup_entire["link"]["link_reference_definition_lines"]:
+                        remove_current_line = True
+                    
             # Checking if the current line contains a heading to be modified
             if (current_line_number in document_markup_entire["heading"]["line_numbers_containing_headings"] and
                     information_from_command_line_input["modification_to_be_made_to_heading"] == True):
@@ -876,7 +883,8 @@ def markup_modification(temporary_file, information_from_command_line_input, doc
                     # Stripping a number of characters of *N* length, where *N* is specified in the `number_of_trailing_characters_to_strip` identifier
                     current_line_string = current_line_string[:-number_of_trailing_characters_to_strip]
             # Writing the line to a temporary file
-            temporary_file.write("{}\n".format(current_line_string))
+            if remove_current_line == False:
+                temporary_file.write("{}\n".format(current_line_string))
 
 # Assignments to hold default values for maximizing output consistency
 file_contents_displayed = False
