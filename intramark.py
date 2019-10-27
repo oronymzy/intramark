@@ -35,9 +35,7 @@ def initial_input():
     The `cli_ctrlflw` dictionary holds command-line-related information in the following way:
     
     ```yaml
-    diagnostic: true                                                       # an item with a boolean value indicating if diagnostic output should be displayed
     display_file_contents: false                                           # an item with a boolean value indicating if the contents of the file should be displayed
-    write_in_place: false                                                  # an item with a boolean value indicating if the file should be overwritten
     decrease_overall_heading_level_maximally: false                        # an item with a boolean value indicating if the overall heading level should be decreased maximally
     increase_overall_heading_level_maximally: false                        # an item with a boolean value indicating if the overall heading level should be increased maximally
     decrease_overall_heading_level_numerically: false                      # an item with a boolean value indicating if the overall heading level should be decreased by a numerical amount
@@ -50,7 +48,6 @@ def initial_input():
     strip_trailing_number_signs_from_headings: false                       # an item with a boolean value indicating if the heading trailing number sign count should be equalized with heading level
     equalize_heading_trailing_number_sign_count_with_heading_level: false  # an item with a boolean value indicating if trailing number signs should be stripped from headings
     strip_all_heading_markup: false                                        # an item with a boolean value indicating if all heading markup text should be stripped
-    annotate_headings: false                                               # an item with a boolean value indicating if explanatory text about a heading should be displayed instead of the heading itself
     strip_all_line_breaks: false                                           # an item with a boolean value indicating if all line break markup text should be stripped
     modification_to_be_made_to_heading: false                              # an item with a boolean value indicating if changes should be made to a heading
     modification_to_be_made_to_line_break: false                           # an item with a boolean value indicating if changes should be made to a line break
@@ -89,11 +86,11 @@ def initial_input():
         mutually_exclusive_modification_group.add_argument("--heading-decrease-max", help="Decrease overall heading level by maximum allowable amount.", action="store_true")
         mutually_exclusive_modification_group.add_argument("--heading-increase-max", help="Increase overall heading level by maximum allowable amount.", action="store_true")
         args = parser.parse_args()
-        return args
+        return args, parser
     
-    args = specify_arguments()
+    args, parser = specify_arguments()
 
-    def assess_arguments(args):
+    def assess_arguments(args, parser):
         "Determine if values provided by the user are valid, and assign values to control-variables, whether provided by the user or not."
         
         cli_ctrlflw = {} # dictionary to hold command-line-related, control-flow-affecting information
@@ -106,25 +103,38 @@ def initial_input():
         cli_ctrlflw["display_file_contents"] = True
         cli_ctrlflw["annotate_headings"] = False
 
-        # Displaying only diagnostic information if the '--diagnostic' argument is provided
-        if args.diagnostic == True:
-            cli_ctrlflw["diagnostic"] = True
-            cli_ctrlflw["display_file_contents"] = False
-        else:
-            cli_ctrlflw["diagnostic"] = False
+        def diagnostic_choice(args, cli_ctrlflw):
+            "Affect control flow to display diagnostic information if the '--diagnostic' argument is provided."
+            
+            if args.diagnostic == True:
+                cli_ctrlflw["diagnostic"] = True
+                cli_ctrlflw["display_file_contents"] = False
+            else:
+                cli_ctrlflw["diagnostic"] = False
+        
+        diagnostic_choice(args, cli_ctrlflw)
 
-        if args.write_in_place == True:
-            cli_ctrlflw["write_in_place"] = True
-        else:
-            cli_ctrlflw["write_in_place"] = False
+        def write_in_place_choice(args, cli_ctrlflw):
+            "Affect control flow to overwrite input file if the '--write-in-place' argument is provided."
+            
+            if args.write_in_place == True:
+                cli_ctrlflw["write_in_place"] = True
+            else:
+                cli_ctrlflw["write_in_place"] = False
+        
+        write_in_place_choice(args, cli_ctrlflw)
 
-        if args.annotate == "H":
-            cli_ctrlflw["annotate_headings"] = True
-        elif args.annotate != None:
-            # In this situation, an invalid value has been provided
-            print("\nInvalid input:".upper(),"the only acceptable value for *-A/--annotate* is *H*.\n")
-            parser.print_help()
-            exit()
+        def annotation_choice(args, cli_ctrlflw, parser):
+            "Affect control flow to display explanatory text about an element instead of the element itself if the '--annotate' argument is provided, also performing data validation to ensure acceptable values are used."
+            
+            if args.annotate == "H":
+                cli_ctrlflw["annotate_headings"] = True
+            elif args.annotate != None:
+                print("\nInvalid input:".upper(),"the only acceptable value for *-A/--annotate* is *H*.\n")
+                parser.print_help()
+                exit()
+        
+        annotation_choice(args, cli_ctrlflw, parser)
 
         # Code related to `plus_H` argument begins
         
@@ -280,7 +290,7 @@ def initial_input():
         
         return cli_ctrlflw
     
-    cli_ctrlflw = assess_arguments(args)
+    cli_ctrlflw = assess_arguments(args, parser)
     
     return cli_ctrlflw
 
