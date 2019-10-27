@@ -57,37 +57,41 @@ def initial_input():
     ```
     """
     
-    # Using the argparse module
-    parser = argparse.ArgumentParser(description="Analyze and modify Markdown-formatted text on the level of Markdown elements to make widespread changes to the text.",prefix_chars='-+=', formatter_class=argparse.RawTextHelpFormatter)
-    parser.add_argument("filename", help="Filename for input.", default=None)
-    parser.add_argument("-d", "--diagnostic", help="Display diagnostic information on the provided input instead of providing output.", action="store_true")
-    parser.add_argument("-w", "--write-in-place", help="Overwrite input file.", action="store_true")
-    modification_group = parser.add_argument_group('modification arguments', 'By default, the relative hierarchical differences between headings will be preserved.')
-    modification_group.add_argument("-A", "--annotate", help=textwrap.dedent("""\
-                                                        Display explanatory text about markup instead of displaying the markup itself.
-                                                        - Use *H* to affect headings."""), default=None)
-    modification_group.add_argument("+H", dest="plus_H", help=textwrap.dedent("""\
-                                                         Increase overall heading level by either:
-                                                         - a numerical amount from 1 to 5, or
-                                                         - *max* for maximum allowable amount"""), default=None)
-    modification_group.add_argument("-H", dest="minus_H", help=textwrap.dedent("""\
-                                                          Decrease overall heading level by either:
-                                                          - a numerical amount from 1 to 5, or
-                                                          - *max* for maximum allowable amount."""), default=None)
-    modification_group.add_argument("=H", dest="equals_H", help="Equalize heading trailing number sign count with heading level.", action="store_true")
-    modification_group.add_argument("-k", "--link", help=textwrap.dedent("""\
-                                                    Modify links.
-                                                    - Use *i* to make all links inline-style. Link reference definitions are removed by default, but this behavior can be suppressed by adding *p* to preserve them."""), default=None)
-    modification_group.add_argument("-s", "--strip", help=textwrap.dedent("""\
-                                                     Strip away markup text.
-                                                     - Use *b* to strip line breaks.
-                                                     - Use *H* to strip all heading markup text.
-                                                     - Use *H-end* to strip only trailing number signs and spaces from headings."""), default=None)
-    mutually_exclusive_modification_group = modification_group.add_mutually_exclusive_group()
-    mutually_exclusive_modification_group.add_argument("--heading-decrease-max", help="Decrease overall heading level by maximum allowable amount.", action="store_true")
-    mutually_exclusive_modification_group.add_argument("--heading-increase-max", help="Increase overall heading level by maximum allowable amount.", action="store_true")
+    def specify_arguments():
+        "Specify allowed command-line arguments using *argparse* module."
+        
+        parser = argparse.ArgumentParser(description="Analyze and modify Markdown-formatted text on the level of Markdown elements to make widespread changes to the text.",prefix_chars='-+=', formatter_class=argparse.RawTextHelpFormatter)
+        parser.add_argument("filename", help="Filename for input.", default=None)
+        parser.add_argument("-d", "--diagnostic", help="Display diagnostic information on the provided input instead of providing output.", action="store_true")
+        parser.add_argument("-w", "--write-in-place", help="Overwrite input file.", action="store_true")
+        modification_group = parser.add_argument_group('modification arguments', 'By default, the relative hierarchical differences between headings will be preserved.')
+        modification_group.add_argument("-A", "--annotate", help=textwrap.dedent("""\
+                                                            Display explanatory text about markup instead of displaying the markup itself.
+                                                            - Use *H* to affect headings."""), default=None)
+        modification_group.add_argument("+H", dest="plus_H", help=textwrap.dedent("""\
+                                                            Increase overall heading level by either:
+                                                            - a numerical amount from 1 to 5, or
+                                                            - *max* for maximum allowable amount"""), default=None)
+        modification_group.add_argument("-H", dest="minus_H", help=textwrap.dedent("""\
+                                                            Decrease overall heading level by either:
+                                                            - a numerical amount from 1 to 5, or
+                                                            - *max* for maximum allowable amount."""), default=None)
+        modification_group.add_argument("=H", dest="equals_H", help="Equalize heading trailing number sign count with heading level.", action="store_true")
+        modification_group.add_argument("-k", "--link", help=textwrap.dedent("""\
+                                                        Modify links.
+                                                        - Use *i* to make all links inline-style. Link reference definitions are removed by default, but this behavior can be suppressed by adding *p* to preserve them."""), default=None)
+        modification_group.add_argument("-s", "--strip", help=textwrap.dedent("""\
+                                                        Strip away markup text.
+                                                        - Use *b* to strip line breaks.
+                                                        - Use *H* to strip all heading markup text.
+                                                        - Use *H-end* to strip only trailing number signs and spaces from headings."""), default=None)
+        mutually_exclusive_modification_group = modification_group.add_mutually_exclusive_group()
+        mutually_exclusive_modification_group.add_argument("--heading-decrease-max", help="Decrease overall heading level by maximum allowable amount.", action="store_true")
+        mutually_exclusive_modification_group.add_argument("--heading-increase-max", help="Increase overall heading level by maximum allowable amount.", action="store_true")
+        args = parser.parse_args()
+        return args
     
-    args = parser.parse_args()
+    args = specify_arguments()
 
     # Creating a dictionary to hold command-line-related information
     initial_input = {}
