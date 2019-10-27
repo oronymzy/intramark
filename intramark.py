@@ -96,8 +96,7 @@ def initial_input():
     def assess_arguments(args):
         "Determine if values provided by the user are valid, and assign values to control-variables, whether provided by the user or not."
         
-        # Creating a dictionary to hold command-line-related information
-        cli_ctrlflw = {}
+        cli_ctrlflw = {} # dictionary to hold command-line-related, control-flow-affecting information
 
         # Assignments to hold default values for maximizing output consistency
         cli_ctrlflw["modification_to_be_made"] = False
