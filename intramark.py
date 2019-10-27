@@ -93,188 +93,195 @@ def initial_input():
     
     args = specify_arguments()
 
-    # Creating a dictionary to hold command-line-related information
-    initial_input = {}
+    def assess_arguments(args):
+        "Determine if values provided by the user are valid, and assign values to control-variables, whether provided by the user or not."
+        
+        # Creating a dictionary to hold command-line-related information
+        initial_input = {}
 
-    # Assignments to hold default values for maximizing output consistency
-    initial_input["modification_to_be_made"] = False
-    initial_input["modification_to_be_made_to_heading"] = False
-    initial_input["modification_to_be_made_to_line_break"] = False
-    initial_input["modification_to_be_made_to_link"] = False
-    initial_input["display_file_contents"] = True
-    initial_input["annotate_headings"] = False
+        # Assignments to hold default values for maximizing output consistency
+        initial_input["modification_to_be_made"] = False
+        initial_input["modification_to_be_made_to_heading"] = False
+        initial_input["modification_to_be_made_to_line_break"] = False
+        initial_input["modification_to_be_made_to_link"] = False
+        initial_input["display_file_contents"] = True
+        initial_input["annotate_headings"] = False
 
-    # Displaying only diagnostic information if the '--diagnostic' argument is provided
-    if args.diagnostic == True:
-        initial_input["diagnostic"] = True
-        initial_input["display_file_contents"] = False
-    else:
-        initial_input["diagnostic"] = False
-
-    if args.write_in_place == True:
-        initial_input["write_in_place"] = True
-    else:
-        initial_input["write_in_place"] = False
-
-    if args.annotate == "H":
-        initial_input["annotate_headings"] = True
-    elif args.annotate != None:
-        # In this situation, an invalid value has been provided
-        print("\nInvalid input:".upper(),"the only acceptable value for *-A/--annotate* is *H*.\n")
-        parser.print_help()
-        exit()
-
-    # Code related to `plus_H` argument begins
-    
-    if args.heading_increase_max == True or args.plus_H == "max":
-        initial_input["increase_overall_heading_level_maximally"] = True
-    else:
-        initial_input["increase_overall_heading_level_maximally"] = False
-
-    # Determining if `plus_H` has a string that should be converted to an integer value
-    if args.plus_H != None and args.plus_H != "max":
-        if int(args.plus_H) >= 1 and int(args.plus_H) <= 5:
-            initial_input["increase_overall_heading_level_numerically"] = True
-            initial_input["number_of_heading_levels_to_increase_numerically"] = int(args.plus_H)
+        # Displaying only diagnostic information if the '--diagnostic' argument is provided
+        if args.diagnostic == True:
+            initial_input["diagnostic"] = True
+            initial_input["display_file_contents"] = False
         else:
-            print("\nInvalid input:".upper(),"acceptable values for *+H* are *max* or *1-5*.\n")
+            initial_input["diagnostic"] = False
+
+        if args.write_in_place == True:
+            initial_input["write_in_place"] = True
+        else:
+            initial_input["write_in_place"] = False
+
+        if args.annotate == "H":
+            initial_input["annotate_headings"] = True
+        elif args.annotate != None:
+            # In this situation, an invalid value has been provided
+            print("\nInvalid input:".upper(),"the only acceptable value for *-A/--annotate* is *H*.\n")
             parser.print_help()
             exit()
-    else:
-        initial_input["increase_overall_heading_level_numerically"] = False
-    
-    # Code related to `plus_H` argument ends
 
-    # Code related to `minus_H` argument begins
-
-    if args.heading_decrease_max == True or args.minus_H == "max":
-        initial_input["decrease_overall_heading_level_maximally"] = True
-    else:
-        initial_input["decrease_overall_heading_level_maximally"] = False
-
-    # Determining if `minus_H` has a string that should be converted to an integer value
-    if args.minus_H != None and args.minus_H != "max":
-        if int(args.minus_H) >= 1 and int(args.minus_H) <= 5:
-            initial_input["decrease_overall_heading_level_numerically"] = True
-            initial_input["number_of_heading_levels_to_decrease_numerically"] = int(args.minus_H)
+        # Code related to `plus_H` argument begins
+        
+        if args.heading_increase_max == True or args.plus_H == "max":
+            initial_input["increase_overall_heading_level_maximally"] = True
         else:
-            print("\nInvalid input:".upper(),"acceptable values for *-H* are *max* or *1-5*.\n")
-            parser.print_help()
-            exit()
-    else:
-        initial_input["decrease_overall_heading_level_numerically"] = False
+            initial_input["increase_overall_heading_level_maximally"] = False
 
-    # Code related to `minus_H` argument ends
-
-    if args.equals_H == True:
-        initial_input["equalize_heading_trailing_number_sign_count_with_heading_level"] = True
-    else:
-        initial_input["equalize_heading_trailing_number_sign_count_with_heading_level"] = False
-    
-    # Code related to `strip` argument begins
-    
-    initial_input["strip_trailing_number_signs_from_headings"] = False
-    initial_input["strip_all_heading_markup"] = False
-    initial_input["strip_all_line_breaks"] = False
-    
-    if args.strip != None:
-        if "b" in args.strip:
-            initial_input["strip_all_line_breaks"] = True
-        if args.strip.count("H") > 1:
-            if "H-end" in args.strip:
-                # In this situation, both `H` and `H-end` have been entered, and an invalid value has been provided
-                print("\nInvalid input:".upper(),"*H* and *H-end* are mutually exclusive values for *-s/--strip*.\n")
+        # Determining if `plus_H` has a string that should be converted to an integer value
+        if args.plus_H != None and args.plus_H != "max":
+            if int(args.plus_H) >= 1 and int(args.plus_H) <= 5:
+                initial_input["increase_overall_heading_level_numerically"] = True
+                initial_input["number_of_heading_levels_to_increase_numerically"] = int(args.plus_H)
+            else:
+                print("\nInvalid input:".upper(),"acceptable values for *+H* are *max* or *1-5*.\n")
                 parser.print_help()
                 exit()
+        else:
+            initial_input["increase_overall_heading_level_numerically"] = False
+        
+        # Code related to `plus_H` argument ends
+
+        # Code related to `minus_H` argument begins
+
+        if args.heading_decrease_max == True or args.minus_H == "max":
+            initial_input["decrease_overall_heading_level_maximally"] = True
+        else:
+            initial_input["decrease_overall_heading_level_maximally"] = False
+
+        # Determining if `minus_H` has a string that should be converted to an integer value
+        if args.minus_H != None and args.minus_H != "max":
+            if int(args.minus_H) >= 1 and int(args.minus_H) <= 5:
+                initial_input["decrease_overall_heading_level_numerically"] = True
+                initial_input["number_of_heading_levels_to_decrease_numerically"] = int(args.minus_H)
             else:
+                print("\nInvalid input:".upper(),"acceptable values for *-H* are *max* or *1-5*.\n")
+                parser.print_help()
+                exit()
+        else:
+            initial_input["decrease_overall_heading_level_numerically"] = False
+
+        # Code related to `minus_H` argument ends
+
+        if args.equals_H == True:
+            initial_input["equalize_heading_trailing_number_sign_count_with_heading_level"] = True
+        else:
+            initial_input["equalize_heading_trailing_number_sign_count_with_heading_level"] = False
+        
+        # Code related to `strip` argument begins
+        
+        initial_input["strip_trailing_number_signs_from_headings"] = False
+        initial_input["strip_all_heading_markup"] = False
+        initial_input["strip_all_line_breaks"] = False
+        
+        if args.strip != None:
+            if "b" in args.strip:
+                initial_input["strip_all_line_breaks"] = True
+            if args.strip.count("H") > 1:
+                if "H-end" in args.strip:
+                    # In this situation, both `H` and `H-end` have been entered, and an invalid value has been provided
+                    print("\nInvalid input:".upper(),"*H* and *H-end* are mutually exclusive values for *-s/--strip*.\n")
+                    parser.print_help()
+                    exit()
+                else:
+                    # In this situation, an invalid value has been provided
+                    print("\nInvalid input:".upper(),"the only acceptable values for *-s/--strip* are *b*, *H*, and *H-end*.\n")
+                    parser.print_help()
+                    exit()
+            if "H-end" in args.strip:
+                initial_input["strip_trailing_number_signs_from_headings"] = True
+            if "H" in args.strip and "H-end" not in args.strip:
+                initial_input["strip_all_heading_markup"] = True
+            if ("b" not in args.strip and
+                    "H-end" not in args.strip and
+                    "H" not in args.strip):
                 # In this situation, an invalid value has been provided
                 print("\nInvalid input:".upper(),"the only acceptable values for *-s/--strip* are *b*, *H*, and *H-end*.\n")
                 parser.print_help()
                 exit()
-        if "H-end" in args.strip:
-            initial_input["strip_trailing_number_signs_from_headings"] = True
-        if "H" in args.strip and "H-end" not in args.strip:
-            initial_input["strip_all_heading_markup"] = True
-        if ("b" not in args.strip and
-                "H-end" not in args.strip and
-                "H" not in args.strip):
-            # In this situation, an invalid value has been provided
-            print("\nInvalid input:".upper(),"the only acceptable values for *-s/--strip* are *b*, *H*, and *H-end*.\n")
-            parser.print_help()
-            exit()
-    
-    # Code related to `strip` argument ends
+        
+        # Code related to `strip` argument ends
 
-    # Code related to `link` argument begins
-    
-    initial_input["make_all_links_inline_style"] = False
-    initial_input["preserve_reference_style_links"] = False
-    
-    if args.link != None:
-        if "i" in args.link:
-            initial_input["make_all_links_inline_style"] = True
-            if "p" in args.link:
-                initial_input["preserve_reference_style_links"] = True
+        # Code related to `link` argument begins
+        
+        initial_input["make_all_links_inline_style"] = False
+        initial_input["preserve_reference_style_links"] = False
+        
+        if args.link != None:
+            if "i" in args.link:
+                initial_input["make_all_links_inline_style"] = True
+                if "p" in args.link:
+                    initial_input["preserve_reference_style_links"] = True
+            else:
+                # In this situation, an invalid value has been provided
+                print("\nInvalid input:".upper(),"the only acceptable values for *-k/--link* are *i* or *ip*.\n")
+                parser.print_help()
+                exit()
+        
+        # Code related to `link` argument ends
+
+        # Determining if any modifications should be made to the contents of the input file
+        if (initial_input["decrease_overall_heading_level_maximally"] == True or
+                initial_input["increase_overall_heading_level_maximally"] == True or
+                initial_input["decrease_overall_heading_level_numerically"] == True or
+                initial_input["increase_overall_heading_level_numerically"] == True or
+                initial_input["strip_trailing_number_signs_from_headings"] == True or
+                initial_input["equalize_heading_trailing_number_sign_count_with_heading_level"] == True or
+                initial_input["strip_all_heading_markup"] == True or
+                initial_input["annotate_headings"] == True):
+            initial_input["modification_to_be_made_to_heading"] = True
+        if initial_input["strip_all_line_breaks"] == True:
+            initial_input["modification_to_be_made_to_line_break"] = True
+        if initial_input["make_all_links_inline_style"] == True:
+            initial_input["modification_to_be_made_to_link"] = True
+        if (initial_input["modification_to_be_made_to_heading"] == True or
+            initial_input["modification_to_be_made_to_line_break"] == True or
+            initial_input["modification_to_be_made_to_link"] == True):
+            initial_input["modification_to_be_made"] = True
+
+        # Input validation: at least one modification option is required in most cases.
+        if initial_input["write_in_place"] == True and initial_input["modification_to_be_made"] == False:
+                print("\nInvalid input:".upper(),"at least one modification argument is required in order to overwrite the input file.\n")
+                parser.print_help()
+                exit()
+
+        initial_input["input_filename"] = args.filename
+        # Detecting command-line interface convention of indicating standard input with a single dash `-`
+        if initial_input["input_filename"].strip() == '-':
+            initial_input["input_filename"] = sys.stdin.readline()
+
+        # Determining if the program is executing from a terminal
+        if sys.stdin.isatty():
+            initial_input["executing_from_terminal"] = True
         else:
-            # In this situation, an invalid value has been provided
-            print("\nInvalid input:".upper(),"the only acceptable values for *-k/--link* are *i* or *ip*.\n")
-            parser.print_help()
+            initial_input["executing_from_terminal"] = False
+
+        # Stripping leading and trailing spaces
+        initial_input["input_filename"] = initial_input["input_filename"].strip(" ")
+        # Checking if a file exists
+        file_exists = os.path.isfile(initial_input["input_filename"])
+
+        # File validation: the file must exist
+        if initial_input["executing_from_terminal"] == True:
+            while file_exists == False:
+                initial_input["input_filename"] = input("The specified file does not exist. Enter a filename:")
+                # Stripping leading and trailing spaces
+                initial_input["input_filename"] = initial_input["input_filename"].strip(" ")
+                # Checking if a file exists
+                file_exists = os.path.isfile(initial_input["input_filename"])
+        elif initial_input["executing_from_terminal"] == False:
+            print("File does not exist. Exiting.")
             exit()
+        
+        return initial_input
     
-    # Code related to `link` argument ends
-
-    # Determining if any modifications should be made to the contents of the input file
-    if (initial_input["decrease_overall_heading_level_maximally"] == True or
-            initial_input["increase_overall_heading_level_maximally"] == True or
-            initial_input["decrease_overall_heading_level_numerically"] == True or
-            initial_input["increase_overall_heading_level_numerically"] == True or
-            initial_input["strip_trailing_number_signs_from_headings"] == True or
-            initial_input["equalize_heading_trailing_number_sign_count_with_heading_level"] == True or
-            initial_input["strip_all_heading_markup"] == True or
-            initial_input["annotate_headings"] == True):
-        initial_input["modification_to_be_made_to_heading"] = True
-    if initial_input["strip_all_line_breaks"] == True:
-        initial_input["modification_to_be_made_to_line_break"] = True
-    if initial_input["make_all_links_inline_style"] == True:
-        initial_input["modification_to_be_made_to_link"] = True
-    if (initial_input["modification_to_be_made_to_heading"] == True or
-        initial_input["modification_to_be_made_to_line_break"] == True or
-        initial_input["modification_to_be_made_to_link"] == True):
-        initial_input["modification_to_be_made"] = True
-
-    # Input validation: at least one modification option is required in most cases.
-    if initial_input["write_in_place"] == True and initial_input["modification_to_be_made"] == False:
-            print("\nInvalid input:".upper(),"at least one modification argument is required in order to overwrite the input file.\n")
-            parser.print_help()
-            exit()
-
-    initial_input["input_filename"] = args.filename
-    # Detecting command-line interface convention of indicating standard input with a single dash `-`
-    if initial_input["input_filename"].strip() == '-':
-        initial_input["input_filename"] = sys.stdin.readline()
-
-    # Determining if the program is executing from a terminal
-    if sys.stdin.isatty():
-        initial_input["executing_from_terminal"] = True
-    else:
-        initial_input["executing_from_terminal"] = False
-
-    # Stripping leading and trailing spaces
-    initial_input["input_filename"] = initial_input["input_filename"].strip(" ")
-    # Checking if a file exists
-    file_exists = os.path.isfile(initial_input["input_filename"])
-
-    # File validation: the file must exist
-    if initial_input["executing_from_terminal"] == True:
-        while file_exists == False:
-            initial_input["input_filename"] = input("The specified file does not exist. Enter a filename:")
-            # Stripping leading and trailing spaces
-            initial_input["input_filename"] = initial_input["input_filename"].strip(" ")
-            # Checking if a file exists
-            file_exists = os.path.isfile(initial_input["input_filename"])
-    elif initial_input["executing_from_terminal"] == False:
-        print("File does not exist. Exiting.")
-        exit()
+    initial_input = assess_arguments(args)
     
     return initial_input
 
