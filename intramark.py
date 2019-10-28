@@ -37,7 +37,6 @@ def initial_input():
     ```yaml
     display_file_contents: false                                           # an item with a boolean value indicating if the contents of the file should be displayed
     decrease_overall_heading_level_maximally: false                        # an item with a boolean value indicating if the overall heading level should be decreased maximally
-    increase_overall_heading_level_maximally: false                        # an item with a boolean value indicating if the overall heading level should be increased maximally
     decrease_overall_heading_level_numerically: false                      # an item with a boolean value indicating if the overall heading level should be decreased by a numerical amount
     number_of_heading_levels_to_decrease_numerically: 0                    # an item with a numerical value indicating the number of heading levels to decrease numerically
     increase_overall_heading_level_numerically: false                      # an item with a boolean value indicating if the overall heading level should be increased by a numerical amount
@@ -135,27 +134,30 @@ def initial_input():
                 exit()
         
         annotation_choice(args, cli_ctrlflw, parser)
-
-        # Code related to `plus_H` argument begins
         
-        if args.heading_increase_max == True or args.plus_H == "max":
-            cli_ctrlflw["increase_overall_heading_level_maximally"] = True
-        else:
-            cli_ctrlflw["increase_overall_heading_level_maximally"] = False
-
-        # Determining if `plus_H` has a string that should be converted to an integer value
-        if args.plus_H != None and args.plus_H != "max":
-            if int(args.plus_H) >= 1 and int(args.plus_H) <= 5:
-                cli_ctrlflw["increase_overall_heading_level_numerically"] = True
-                cli_ctrlflw["number_of_heading_levels_to_increase_numerically"] = int(args.plus_H)
+        def heading_increase_choice(args, cli_ctrlflw, parser):
+            """Affect control flow to increase overall heading level.
+            
+            Heading can be increased maximally or numerically. If increased numerically, a string specifying the number of heading levels to be increased is received from user input and validated.
+            """
+            
+            if args.heading_increase_max == True or args.plus_H == "max":
+                cli_ctrlflw["increase_overall_heading_level_maximally"] = True
             else:
-                print("\nInvalid input:".upper(),"acceptable values for *+H* are *max* or *1-5*.\n")
-                parser.print_help()
-                exit()
-        else:
-            cli_ctrlflw["increase_overall_heading_level_numerically"] = False
+                cli_ctrlflw["increase_overall_heading_level_maximally"] = False
+
+            if args.plus_H != None and args.plus_H != "max":
+                if int(args.plus_H) >= 1 and int(args.plus_H) <= 5:
+                    cli_ctrlflw["increase_overall_heading_level_numerically"] = True
+                    cli_ctrlflw["number_of_heading_levels_to_increase_numerically"] = int(args.plus_H)
+                else:
+                    print("\nInvalid input:".upper(),"acceptable values for *+H* are *max* or *1-5*.\n")
+                    parser.print_help()
+                    exit()
+            else:
+                cli_ctrlflw["increase_overall_heading_level_numerically"] = False
         
-        # Code related to `plus_H` argument ends
+        heading_increase_choice(args, cli_ctrlflw, parser)
 
         # Code related to `minus_H` argument begins
 
