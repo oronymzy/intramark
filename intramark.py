@@ -35,7 +35,6 @@ def initial_input():
     The `cli_ctrlflw` dictionary holds command-line-related information in the following way:
     
     ```yaml
-    display_file_contents: false                                           # an item with a boolean value indicating if the contents of the file should be displayed
     decrease_overall_heading_level_maximally: false                        # an item with a boolean value indicating if the overall heading level should be decreased maximally
     decrease_overall_heading_level_numerically: false                      # an item with a boolean value indicating if the overall heading level should be decreased by a numerical amount
     number_of_heading_levels_to_decrease_numerically: 0                    # an item with a numerical value indicating the number of heading levels to decrease numerically
@@ -99,19 +98,20 @@ def initial_input():
         cli_ctrlflw["modification_to_be_made_to_heading"] = False
         cli_ctrlflw["modification_to_be_made_to_line_break"] = False
         cli_ctrlflw["modification_to_be_made_to_link"] = False
-        cli_ctrlflw["display_file_contents"] = True
         cli_ctrlflw["annotate_headings"] = False
 
-        def diagnostic_choice(args, cli_ctrlflw):
-            "Affect control flow to display diagnostic information if the '--diagnostic' argument is provided."
+        def diagnostic_choice(args):
+            "Affect control flow to display diagnostic information in place of file contents if the '--diagnostic' argument is provided."
             
+            display_file_contents = True
             if args.diagnostic == True:
-                cli_ctrlflw["diagnostic"] = True
-                cli_ctrlflw["display_file_contents"] = False
+                diagnostic = True
+                display_file_contents = False
             else:
-                cli_ctrlflw["diagnostic"] = False
+                diagnostic = False
+            return diagnostic, display_file_contents
         
-        diagnostic_choice(args, cli_ctrlflw)
+        cli_ctrlflw["diagnostic"], cli_ctrlflw["display_file_contents"] = diagnostic_choice(args)
 
         def write_in_place_choice(args, cli_ctrlflw):
             "Affect control flow to overwrite input file if the '--write-in-place' argument is provided."
