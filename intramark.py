@@ -113,15 +113,16 @@ def initial_input():
         
         cli_ctrlflw["diagnostic"], cli_ctrlflw["display_file_contents"] = diagnostic_choice(args)
 
-        def write_in_place_choice(args, cli_ctrlflw):
+        def write_in_place_choice(args):
             "Affect control flow to overwrite input file if the '--write-in-place' argument is provided."
             
             if args.write_in_place == True:
-                cli_ctrlflw["write_in_place"] = True
+                write_in_place = True
             else:
-                cli_ctrlflw["write_in_place"] = False
+                write_in_place = False
+            return write_in_place
         
-        write_in_place_choice(args, cli_ctrlflw)
+        cli_ctrlflw["write_in_place"] = write_in_place_choice(args)
 
         def annotation_choice(args, cli_ctrlflw, parser):
             "Affect control flow to display explanatory text about an element instead of the element itself if the '--annotate' argument is provided, also performing data validation to ensure acceptable values are used."
