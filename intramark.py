@@ -260,24 +260,41 @@ def initial_input():
         
         cli_ctrlflw["make_all_links_inline_style"], cli_ctrlflw["preserve_reference_style_links"] = link_choice(args, parser)
         
-        # Determining if any modifications should be made to the contents of the input file
-        if (cli_ctrlflw["decrease_overall_heading_level_maximally"] == True or
-                cli_ctrlflw["increase_overall_heading_level_maximally"] == True or
-                cli_ctrlflw["decrease_overall_heading_level_numerically"] == True or
-                cli_ctrlflw["increase_overall_heading_level_numerically"] == True or
-                cli_ctrlflw["strip_trailing_number_signs_from_headings"] == True or
-                cli_ctrlflw["equalize_heading_trailing_number_sign_count_with_heading_level"] == True or
-                cli_ctrlflw["strip_all_heading_markup"] == True or
-                cli_ctrlflw["annotate_headings"] == True):
-            cli_ctrlflw["modification_to_be_made_to_heading"] = True
-        if cli_ctrlflw["strip_all_line_breaks"] == True:
-            cli_ctrlflw["modification_to_be_made_to_line_break"] = True
-        if cli_ctrlflw["make_all_links_inline_style"] == True:
-            cli_ctrlflw["modification_to_be_made_to_link"] = True
-        if (cli_ctrlflw["modification_to_be_made_to_heading"] == True or
-            cli_ctrlflw["modification_to_be_made_to_line_break"] == True or
-            cli_ctrlflw["modification_to_be_made_to_link"] == True):
-            cli_ctrlflw["modification_to_be_made"] = True
+        def control_generalization(cli_ctrlflw):
+            "Create generalized control-variables based on truthiness of existing control-variables. Depends on includion of all control-variables from earlier functions to work correctly."
+            
+            if (cli_ctrlflw["decrease_overall_heading_level_maximally"] == True or
+                    cli_ctrlflw["increase_overall_heading_level_maximally"] == True or
+                    cli_ctrlflw["decrease_overall_heading_level_numerically"] == True or
+                    cli_ctrlflw["increase_overall_heading_level_numerically"] == True or
+                    cli_ctrlflw["strip_trailing_number_signs_from_headings"] == True or
+                    cli_ctrlflw["equalize_heading_trailing_number_sign_count_with_heading_level"] == True or
+                    cli_ctrlflw["strip_all_heading_markup"] == True or
+                    cli_ctrlflw["annotate_headings"] == True):
+                modification_to_be_made_to_heading = True
+            else:
+                modification_to_be_made_to_heading = False
+            
+            if cli_ctrlflw["strip_all_line_breaks"] == True:
+                modification_to_be_made_to_line_break = True
+            else:
+                modification_to_be_made_to_line_break = False
+                
+            if cli_ctrlflw["make_all_links_inline_style"] == True:
+                modification_to_be_made_to_link = True
+            else:
+                modification_to_be_made_to_link = False
+            
+            if (cli_ctrlflw["modification_to_be_made_to_heading"] == True or
+                cli_ctrlflw["modification_to_be_made_to_line_break"] == True or
+                cli_ctrlflw["modification_to_be_made_to_link"] == True):
+                modification_to_be_made = True
+            else:
+                modification_to_be_made = False
+            
+            return modification_to_be_made_to_heading, modification_to_be_made_to_line_break, modification_to_be_made_to_link, modification_to_be_made
+        
+        cli_ctrlflw["modification_to_be_made_to_heading"], cli_ctrlflw["modification_to_be_made_to_line_break"], cli_ctrlflw["modification_to_be_made_to_link"], cli_ctrlflw["modification_to_be_made"] = control_generalization(cli_ctrlflw)
 
         # Input validation: at least one modification option is required in most cases.
         if cli_ctrlflw["write_in_place"] == True and cli_ctrlflw["modification_to_be_made"] == False:
@@ -286,6 +303,7 @@ def initial_input():
                 exit()
 
         cli_ctrlflw["input_filename"] = args.filename
+        
         # Detecting command-line interface convention of indicating standard input with a single dash `-`
         if cli_ctrlflw["input_filename"].strip() == '-':
             cli_ctrlflw["input_filename"] = sys.stdin.readline()
