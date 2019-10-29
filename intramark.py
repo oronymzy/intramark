@@ -191,10 +191,16 @@ def initial_input():
         
         cli_ctrlflw["decrease_overall_heading_level_maximally"], cli_ctrlflw["decrease_overall_heading_level_numerically"], cli_ctrlflw["number_of_heading_levels_to_decrease_numerically"] = heading_decrease_choice(args, parser)
 
-        if args.equals_H == True:
-            cli_ctrlflw["equalize_heading_trailing_number_sign_count_with_heading_level"] = True
-        else:
-            cli_ctrlflw["equalize_heading_trailing_number_sign_count_with_heading_level"] = False
+        def heading_equalize_choice(args, parser):
+            "Affect control flow to equalize heading trailing number sign count with heading level."
+            
+            if args.equals_H == True:
+                equalize_heading_trailing_number_sign_count_with_heading_level = True
+            else:
+                equalize_heading_trailing_number_sign_count_with_heading_level = False
+            return equalize_heading_trailing_number_sign_count_with_heading_level
+        
+        cli_ctrlflw["equalize_heading_trailing_number_sign_count_with_heading_level"] = heading_equalize_choice(args, parser)
         
         # Code related to `strip` argument begins
         
