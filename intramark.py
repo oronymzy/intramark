@@ -208,6 +208,8 @@ def initial_input():
             - Strip line breaks.
             - Strip all heading markup text.
             - Strip only trailing number signs and spaces from headings.
+            
+            Validation is performed.
             """
             
             strip_all_line_breaks = False
@@ -230,24 +232,34 @@ def initial_input():
         
         cli_ctrlflw["strip_trailing_number_signs_from_headings"], cli_ctrlflw["strip_all_heading_markup"], cli_ctrlflw["strip_all_line_breaks"] = strip_choice(args, parser)
 
-        # Code related to `link` argument begins
+        def link_choice(args, parser):
+            """Affect control flow to modify links in one of any of the following ways:
+            
+            - Make all links inline-style and remove link reference definitions.
+            - Make all links inline-style and preserve link reference definitions.
+            
+            Validation is performed.
+            """
+            
+            make_all_links_inline_style = False
+            preserve_reference_style_links = False
+            
+            if args.link != None:
+                if len(args.link) == 1 and args.link == "i":
+                    make_all_links_inline_style = True
+                elif len(args.link) == 2 and "i" in args.link and "p" in args.link:
+                    make_all_links_inline_style = True
+                    preserve_reference_style_links = True
+                else:
+                    # In this situation, an invalid value has been provided
+                    print("\nInvalid input:".upper(),"the only acceptable values for *-k/--link* are *i* alone or *i* and *p*.\n")
+                    parser.print_help()
+                    exit()
+            
+            return make_all_links_inline_style, preserve_reference_style_links
         
-        cli_ctrlflw["make_all_links_inline_style"] = False
-        cli_ctrlflw["preserve_reference_style_links"] = False
+        cli_ctrlflw["make_all_links_inline_style"], cli_ctrlflw["preserve_reference_style_links"] = link_choice(args, parser)
         
-        if args.link != None:
-            if "i" in args.link:
-                cli_ctrlflw["make_all_links_inline_style"] = True
-                if "p" in args.link:
-                    cli_ctrlflw["preserve_reference_style_links"] = True
-            else:
-                # In this situation, an invalid value has been provided
-                print("\nInvalid input:".upper(),"the only acceptable values for *-k/--link* are *i* or *ip*.\n")
-                parser.print_help()
-                exit()
-        
-        # Code related to `link` argument ends
-
         # Determining if any modifications should be made to the contents of the input file
         if (cli_ctrlflw["decrease_overall_heading_level_maximally"] == True or
                 cli_ctrlflw["increase_overall_heading_level_maximally"] == True or
