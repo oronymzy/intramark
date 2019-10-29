@@ -203,39 +203,25 @@ def initial_input():
         cli_ctrlflw["equalize_heading_trailing_number_sign_count_with_heading_level"] = heading_equalize_choice(args, parser)
         
         def strip_choice(args, parser):
-            """Affect control flow to strip away markup text.
+            """Affect control flow to strip away markup text in one of any of the following ways:
             
-            - Use *b* to strip line breaks.
-            - Use *H* to strip all heading markup text.
-            - Use *H-end* to strip only trailing number signs and spaces from headings.
+            - Strip line breaks.
+            - Strip all heading markup text.
+            - Strip only trailing number signs and spaces from headings.
             """
             
-            strip_trailing_number_signs_from_headings = False
-            strip_all_heading_markup = False
             strip_all_line_breaks = False
+            strip_all_heading_markup = False
+            strip_trailing_number_signs_from_headings = False
             
             if args.strip != None:
-                if "b" in args.strip:
+                if args.strip == "b":
                     strip_all_line_breaks = True
-                if args.strip.count("H") > 1:
-                    if "H-end" in args.strip:
-                        # In this situation, both `H` and `H-end` have been entered, and an invalid value has been provided
-                        print("\nInvalid input:".upper(),"*H* and *H-end* are mutually exclusive values for *-s/--strip*.\n")
-                        parser.print_help()
-                        exit()
-                    else:
-                        # In this situation, an invalid value has been provided
-                        print("\nInvalid input:".upper(),"the only acceptable values for *-s/--strip* are *b*, *H*, and *H-end*.\n")
-                        parser.print_help()
-                        exit()
-                if "H-end" in args.strip:
-                    strip_trailing_number_signs_from_headings = True
-                if "H" in args.strip and "H-end" not in args.strip:
+                elif args.strip == "H":
                     strip_all_heading_markup = True
-                if ("b" not in args.strip and
-                        "H-end" not in args.strip and
-                        "H" not in args.strip):
-                    # In this situation, an invalid value has been provided
+                elif args.strip == "H-end":
+                    strip_trailing_number_signs_from_headings = True
+                else:
                     print("\nInvalid input:".upper(),"the only acceptable values for *-s/--strip* are *b*, *H*, and *H-end*.\n")
                     parser.print_help()
                     exit()
