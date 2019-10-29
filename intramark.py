@@ -98,7 +98,6 @@ def initial_input():
         cli_ctrlflw["modification_to_be_made_to_heading"] = False
         cli_ctrlflw["modification_to_be_made_to_line_break"] = False
         cli_ctrlflw["modification_to_be_made_to_link"] = False
-        cli_ctrlflw["annotate_headings"] = False
 
         def diagnostic_choice(args):
             "Affect control flow to display diagnostic information in place of file contents if the '--diagnostic' argument is provided."
@@ -124,41 +123,46 @@ def initial_input():
         
         cli_ctrlflw["write_in_place"] = write_in_place_choice(args)
 
-        def annotation_choice(args, cli_ctrlflw, parser):
+        def annotation_choice(args, parser):
             "Affect control flow to display explanatory text about an element instead of the element itself if the '--annotate' argument is provided, also performing data validation to ensure acceptable values are used."
             
+            annotate_headings = False
             if args.annotate == "H":
-                cli_ctrlflw["annotate_headings"] = True
+                annotate_headings = True
             elif args.annotate != None:
                 print("\nInvalid input:".upper(),"the only acceptable value for *-A/--annotate* is *H*.\n")
                 parser.print_help()
                 exit()
+            return annotate_headings
         
-        annotation_choice(args, cli_ctrlflw, parser)
+        cli_ctrlflw["annotate_headings"] = annotation_choice(args, parser)
         
-        def heading_increase_choice(args, cli_ctrlflw, parser):
+        def heading_increase_choice(args, parser):
             """Affect control flow to increase overall heading level.
             
             Heading can be increased maximally or numerically. If increased numerically, a string specifying the number of heading levels to be increased is received from user input and validated.
             """
             
             if args.heading_increase_max == True or args.plus_H == "max":
-                cli_ctrlflw["increase_overall_heading_level_maximally"] = True
+                increase_overall_heading_level_maximally = True
             else:
-                cli_ctrlflw["increase_overall_heading_level_maximally"] = False
+                increase_overall_heading_level_maximally = False
 
             if args.plus_H != None and args.plus_H != "max":
-                if int(args.plus_H) >= 1 and int(args.plus_H) <= 5:
-                    cli_ctrlflw["increase_overall_heading_level_numerically"] = True
-                    cli_ctrlflw["number_of_heading_levels_to_increase_numerically"] = int(args.plus_H)
+                if args.plus_H.isdigit() and int(args.plus_H) >= 1 and int(args.plus_H) <= 5:
+                    increase_overall_heading_level_numerically = True
+                    number_of_heading_levels_to_increase_numerically = int(args.plus_H)
                 else:
                     print("\nInvalid input:".upper(),"acceptable values for *+H* are *max* or *1-5*.\n")
                     parser.print_help()
                     exit()
             else:
-                cli_ctrlflw["increase_overall_heading_level_numerically"] = False
+                increase_overall_heading_level_numerically = False
+                number_of_heading_levels_to_increase_numerically = 0
+            
+            return increase_overall_heading_level_maximally, increase_overall_heading_level_numerically, number_of_heading_levels_to_increase_numerically
         
-        heading_increase_choice(args, cli_ctrlflw, parser)
+        cli_ctrlflw["increase_overall_heading_level_maximally"], cli_ctrlflw["increase_overall_heading_level_numerically"], cli_ctrlflw["number_of_heading_levels_to_increase_numerically"] = heading_increase_choice(args, parser)
 
         # Code related to `minus_H` argument begins
 
