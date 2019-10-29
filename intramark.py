@@ -140,7 +140,7 @@ def initial_input():
         def heading_increase_choice(args, parser):
             """Affect control flow to increase overall heading level.
             
-            Heading can be increased maximally or numerically. If increased numerically, a string specifying the number of heading levels to be increased is received from user input and validated.
+            Heading can be increased maximally or numerically. If increased numerically, a string specifying the number of heading levels to be increased is received from user input, converted to an integer value, and validated.
             """
             
             if args.heading_increase_max == True or args.plus_H == "max":
@@ -164,26 +164,32 @@ def initial_input():
         
         cli_ctrlflw["increase_overall_heading_level_maximally"], cli_ctrlflw["increase_overall_heading_level_numerically"], cli_ctrlflw["number_of_heading_levels_to_increase_numerically"] = heading_increase_choice(args, parser)
 
-        # Code related to `minus_H` argument begins
-
-        if args.heading_decrease_max == True or args.minus_H == "max":
-            cli_ctrlflw["decrease_overall_heading_level_maximally"] = True
-        else:
-            cli_ctrlflw["decrease_overall_heading_level_maximally"] = False
-
-        # Determining if `minus_H` has a string that should be converted to an integer value
-        if args.minus_H != None and args.minus_H != "max":
-            if int(args.minus_H) >= 1 and int(args.minus_H) <= 5:
-                cli_ctrlflw["decrease_overall_heading_level_numerically"] = True
-                cli_ctrlflw["number_of_heading_levels_to_decrease_numerically"] = int(args.minus_H)
+        def heading_decrease_choice(args, parser):
+            """Affect control flow to decrease overall heading level.
+            
+            Heading can be decreased maximally or numerically. If decreased numerically, a string specifying the number of heading levels to be decreased is received from user input, converted to an integer value, and validated.
+            """
+            
+            if args.heading_decrease_max == True or args.minus_H == "max":
+                decrease_overall_heading_level_maximally = True
             else:
-                print("\nInvalid input:".upper(),"acceptable values for *-H* are *max* or *1-5*.\n")
-                parser.print_help()
-                exit()
-        else:
-            cli_ctrlflw["decrease_overall_heading_level_numerically"] = False
-
-        # Code related to `minus_H` argument ends
+                decrease_overall_heading_level_maximally = False
+            
+            if args.minus_H != None and args.minus_H != "max":
+                if args.minus_H.isdigit() and int(args.minus_H) >= 1 and int(args.minus_H) <= 5:
+                    decrease_overall_heading_level_numerically = True
+                    number_of_heading_levels_to_decrease_numerically = int(args.minus_H)
+                else:
+                    print("\nInvalid input:".upper(),"acceptable values for *-H* are *max* or *1-5*.\n")
+                    parser.print_help()
+                    exit()
+            else:
+                decrease_overall_heading_level_numerically = False
+                number_of_heading_levels_to_decrease_numerically = 0
+            
+            return decrease_overall_heading_level_maximally, decrease_overall_heading_level_numerically, number_of_heading_levels_to_decrease_numerically
+        
+        cli_ctrlflw["decrease_overall_heading_level_maximally"], cli_ctrlflw["decrease_overall_heading_level_numerically"], cli_ctrlflw["number_of_heading_levels_to_decrease_numerically"] = heading_decrease_choice(args, parser)
 
         if args.equals_H == True:
             cli_ctrlflw["equalize_heading_trailing_number_sign_count_with_heading_level"] = True
