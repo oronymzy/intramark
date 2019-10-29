@@ -42,7 +42,6 @@ def initial_input():
     number_of_heading_levels_to_increase_numerically: 0                    # an item with a numerical value indicating the number of heading levels to increase numerically
     modification_to_be_made: false                                         # an item with a boolean value indicating if changes should be made to the contents of the file
     input_filename: foo.bar                                                # an item with a string value indicating the filename of the file to be used for input
-    executing_from_terminal: false                                         # an item with a boolean value indicating if the program is executing from a terminal
     strip_trailing_number_signs_from_headings: false                       # an item with a boolean value indicating if the heading trailing number sign count should be equalized with heading level
     equalize_heading_trailing_number_sign_count_with_heading_level: false  # an item with a boolean value indicating if trailing number signs should be stripped from headings
     strip_all_heading_markup: false                                        # an item with a boolean value indicating if all heading markup text should be stripped
@@ -295,42 +294,41 @@ def initial_input():
             return modification_to_be_made_to_heading, modification_to_be_made_to_line_break, modification_to_be_made_to_link, modification_to_be_made
         
         cli_ctrlflw["modification_to_be_made_to_heading"], cli_ctrlflw["modification_to_be_made_to_line_break"], cli_ctrlflw["modification_to_be_made_to_link"], cli_ctrlflw["modification_to_be_made"] = control_generalization(cli_ctrlflw)
-
-        # Input validation: at least one modification option is required in most cases.
+        
+        # Control-variable validation: at least one modification option is required in most cases.
         if cli_ctrlflw["write_in_place"] == True and cli_ctrlflw["modification_to_be_made"] == False:
                 print("\nInvalid input:".upper(),"at least one modification argument is required in order to overwrite the input file.\n")
                 parser.print_help()
                 exit()
-
-        cli_ctrlflw["input_filename"] = args.filename
         
-        # Detecting command-line interface convention of indicating standard input with a single dash `-`
-        if cli_ctrlflw["input_filename"].strip() == '-':
-            cli_ctrlflw["input_filename"] = sys.stdin.readline()
-
-        # Determining if the program is executing from a terminal
-        if sys.stdin.isatty():
-            cli_ctrlflw["executing_from_terminal"] = True
-        else:
-            cli_ctrlflw["executing_from_terminal"] = False
-
-        # Stripping leading and trailing spaces
-        cli_ctrlflw["input_filename"] = cli_ctrlflw["input_filename"].strip(" ")
-        # Checking if a file exists
-        file_exists = os.path.isfile(cli_ctrlflw["input_filename"])
-
-        # File validation: the file must exist
-        if cli_ctrlflw["executing_from_terminal"] == True:
-            while file_exists == False:
-                cli_ctrlflw["input_filename"] = input("The specified file does not exist. Enter a filename:")
-                # Stripping leading and trailing spaces
-                cli_ctrlflw["input_filename"] = cli_ctrlflw["input_filename"].strip(" ")
-                # Checking if a file exists
-                file_exists = os.path.isfile(cli_ctrlflw["input_filename"])
-        elif cli_ctrlflw["executing_from_terminal"] == False:
-            print("File does not exist. Exiting.")
-            exit()
+        def assess_file(args):
+            """Assess information related to file and filename.
+            
+            Get filename and strip it of leading and trailing spaces. Confirm that file exists, prompting user to enter another filename if the program is running from a terminal, and exiting if not.
+            """
+            
+            input_filename = args.filename
+            input_filename = input_filename.strip(" ")
+            file_exists = os.path.isfile(input_filename)
+            
+            if sys.stdin.isatty():
+                executing_from_terminal = True
+            else:
+                executing_from_terminal = False
+            
+            if executing_from_terminal == True:
+                while file_exists == False:
+                    input_filename = input("The specified file does not exist. Enter a filename:")
+                    input_filename = input_filename.strip(" ")
+                    file_exists = os.path.isfile(input_filename)
+            elif executing_from_terminal == False:
+                print("File does not exist. Exiting.")
+                exit()
+            
+            return input_filename
         
+        cli_ctrlflw["input_filename"] = assess_file(args)
+
         return cli_ctrlflw
     
     cli_ctrlflw = assess_arguments(args, parser)
