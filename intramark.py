@@ -260,7 +260,10 @@ def initial_input():
         cli_ctrlflw["make_all_links_inline_style"], cli_ctrlflw["preserve_reference_style_links"] = link_choice(args, parser)
         
         def control_generalization(cli_ctrlflw):
-            "Create generalized control-variables based on truthiness of existing control-variables. Depends on includion of all control-variables from earlier functions to work correctly."
+            """Create generalized control-variables based on truthiness of existing control-variables. Depends on inclusion of all control-variables from earlier functions to work correctly.
+            
+            Validation is performed to make sure write-in-place is combined with at least one modification option.
+            """
             
             if (cli_ctrlflw["decrease_overall_heading_level_maximally"] == True or
                     cli_ctrlflw["increase_overall_heading_level_maximally"] == True or
@@ -291,15 +294,14 @@ def initial_input():
             else:
                 modification_to_be_made = False
             
+            if cli_ctrlflw["write_in_place"] == True and cli_ctrlflw["modification_to_be_made"] == False:
+                    print("\nInvalid input:".upper(),"at least one modification argument is required in order to overwrite the input file.\n")
+                    parser.print_help()
+                    exit()
+            
             return modification_to_be_made_to_heading, modification_to_be_made_to_line_break, modification_to_be_made_to_link, modification_to_be_made
         
         cli_ctrlflw["modification_to_be_made_to_heading"], cli_ctrlflw["modification_to_be_made_to_line_break"], cli_ctrlflw["modification_to_be_made_to_link"], cli_ctrlflw["modification_to_be_made"] = control_generalization(cli_ctrlflw)
-        
-        # Control-variable validation: at least one modification option is required in most cases.
-        if cli_ctrlflw["write_in_place"] == True and cli_ctrlflw["modification_to_be_made"] == False:
-                print("\nInvalid input:".upper(),"at least one modification argument is required in order to overwrite the input file.\n")
-                parser.print_help()
-                exit()
         
         def assess_file(args):
             """Assess information related to file and filename.
